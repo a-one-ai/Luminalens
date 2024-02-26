@@ -1,0 +1,293 @@
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:19] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:19] "GET /signin HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:24] "[32mPOST /signin HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:24] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:24] "[33mGET /app/static/css/base.css HTTP/1.1[0m" 404 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:24] "[36mGET /static/img/logo.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:41] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:41] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:36:41] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.0.177:3000
+info:werkzeug:[33mPress CTRL+C to quit[0m
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:44] "GET /signin HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:44] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:51] "[32mPOST /signin HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:52] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:52] "[33mGET /app/static/css/base.css HTTP/1.1[0m" 404 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:42:52] "[36mGET /static/img/logo.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:43:09] "[35m[1mPOST /applyModel HTTP/1.1[0m" 500 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:43:09] "GET /applyModel?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:43:09] "GET /applyModel?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:43:09] "GET /applyModel?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:43:10] "[36mGET /applyModel?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:53:49] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:53:54] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:53:55] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:53:57] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:54:48] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:55:26] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:55:26] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:55:26] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 15:55:29] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:13:45] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:13:45] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:13:46] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:14:09] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:15:38] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:15:38] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:15:38] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:15:41] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:09] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:09] "[33mGET /app/static/css/base.css HTTP/1.1[0m" 404 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:10] "[36mGET /static/img/logo.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:23] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:23] "GET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:23:24] "[36mGET /static/img/success.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:25:10] "[35m[1mGET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1[0m" 500 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:25:10] "[36mGET /running?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:25:10] "[36mGET /running?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:25:10] "[36mGET /running?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:26:07] "[35m[1mGET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1[0m" 500 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:26:08] "[36mGET /running?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:26:08] "[36mGET /running?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:26:08] "[36mGET /running?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:26:09] "[36mGET /running?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:30] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:35] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:36] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:28:41] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:11] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:12] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:12] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:12] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:14] "[32mGET /running HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:29:16] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:30:35] "[32mPOST /applyModel HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:30:36] "[32mGET /running?cameraName=1&sourceType=WEBCAM&source=0&Model=crossingBorder HTTP/1.1[0m" 302 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:30:36] "GET /applyModel HTTP/1.1" 200 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:30:37] "[33mGET /app/static/css/base.css HTTP/1.1[0m" 404 -
+info:werkzeug:192.168.0.177 - - [04/Feb/2024 16:30:37] "[36mGET /static/img/logo.png HTTP/1.1[0m" 304 -
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.1.113:3000
+info:werkzeug:[33mPress CTRL+C to quit[0m
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.1.113:3000
+info:werkzeug:[33mPress CTRL+C to quit[0m
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\projectModel.py', reloading
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\projectModel.py', reloading
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\MongoPackageV2.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\MongoPackageV2.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\MongoPackageV2.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\main.py', reloading
+info:werkzeug: * Restarting with stat
+warning:werkzeug: * Debugger is active!
+info:werkzeug: * Debugger PIN: 125-538-231
+info:werkzeug: * Detected change in 'd:\\NewProject_NTA\\project\\app\\MongoPackageV2.py', reloading
+info:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.1.113:3000
+info:werkzeug:[33mPress CTRL+C to quit[0m
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
+info:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.1.113:3000
+info:werkzeug:[33mPress CTRL+C to quit[0m
+info:werkzeug: * Restarting with stat
+info:werkzeug: * Restarting with stat
