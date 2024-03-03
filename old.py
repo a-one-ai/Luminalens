@@ -1145,7 +1145,32 @@
 
 
 
+# cap = cv2.VideoCapture(0) 
+# while True:
+#     ret, frame = cap.read()
 
+#     if not ret:
+#         break
+
+#     # frame , label , rgbarray , colorname =  clothes_detection(frame)
+#     # #print(label, rgbarray,colorname)
+#     # result_list = []
+#     # for item1, item2, item3 in zip(label, rgbarray,colorname):
+#     #     result_list.append([item1, item2[0],item3[0]])
+#     # print(result_list)
+
+#     path , label = detect_GENDER(frame , 'test')
+#     pprint.pprint(label)
+#     cv2.imshow('Image', frame)
+    
+#     # Check for 'q' key to exit the loop
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+
+
+# # Release the camera and close all OpenCV windows
+# cap.release()
+# cv2.destroyAllWindows()
 
 
 

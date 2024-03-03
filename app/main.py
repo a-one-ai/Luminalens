@@ -1,4 +1,4 @@
-from flask import Flask , render_template , request , redirect , url_for, jsonify 
+from flask import Flask , render_template , request , redirect , url_for, jsonify , Response , make_response
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user , current_user
 from functions import *           
 from threading import Thread
@@ -8,6 +8,7 @@ from bson import ObjectId
 import os 
 import warnings
 from MongoPackageV2 import *
+from functools import wraps
 
 warnings.filterwarnings("ignore")
 
@@ -23,6 +24,53 @@ app.config['SECRET_KEY'] = os.urandom(32)
 #____________________________________________________________
 # Enable Cross-Origin Resource Sharing (CORS) for handling requests from different origins
 CORS(app)
+
+
+
+
+
+
+
+
+# def save_log_to_database(level, message):
+#     timestamp = datetime.now()
+#     log_data = {'level': level, 'message': message, 'timestamp': timestamp}
+#     mongo.db.logs.insert_one(log_data)
+
+logs_collection = db["systemLogs"]
+def log_route_info_to_db(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Log information about the route and its parameters
+        log_entry = {
+            'timestamp': datetime.now(),
+            'route': request.url,
+            'method': request.method,
+            'parameters': dict(request.form),
+            'message': f"Route: {request.url}, Method: {request.method}, Parameters: {request.args.to_dict()}"
+        }
+        # Execute the route function
+        response = func(*args, **kwargs)
+        status_code = response.status_code
+        data = ''
+        if status_code == 302 :
+            data = 'No Data, Login required'
+        else :
+            data = response.data.decode('utf-8')
+
+        # Extract relevant information from the response
+        response_info = {
+            'status_code': status_code ,
+            'data': data
+            # Add more fields as needed
+        }
+        log_entry['response'] = response_info
+        
+        # Insert the log entry into the MongoDB collection
+        logs_collection.insert_one(log_entry)
+        
+        return response
+    return wrapper
 
 #____________________________________________________________
 @app.route('/')
@@ -99,6 +147,7 @@ def signup():
 
 # ##--------------------------------------
 @app.route('/signin', methods=['POST'])
+@log_route_info_to_db
 def signin():
 
     data = request.form
@@ -119,18 +168,33 @@ def signin():
         return jsonify({"username": username, "token": "token", "logined": True})
     else:
         return jsonify({"mess": "Invalid username or password"})
+    
+    # if user and check_password_hash(user['Password'], password):
+    #     user_obj = User(user_id=user['_id'], username=user['Username'], email=user['Email'], phone=user.get('Phone', ''))  
+    #     login_user(user_obj)
+    #     log_message = 'User {} logged in successfully'.format(username)
+    #     save_log_to_database('INFO', log_message)
+    #     return jsonify({"username": username, "token": "token", "logined": True})
+    # else:
+    #     log_message = 'Failed login attempt for user {}'.format(username)
+    #     save_log_to_database('WARNING', log_message)
+    #     return jsonify({"mess": "Invalid username or password"})
 
 # ##--------------------------------------
+    
 @app.route('/signout', methods=['GET'])
-@login_required
+@log_route_info_to_db
+# @login_required
 def signout():
     logout_user()
     return redirect(url_for('signin'))
 
 #____________________________________________________________
-##################### STATIC LIST APIs ######################
+################/##### STATIC LIST APIs ######################
 #____________________________________________________________
 @app.route('/get_cameraname', methods=['GET'])
+@log_route_info_to_db
+# @login_required
 def get_cameraname():
     cameraName = finding_camera_names()
     # cameraName = [1,2,4]
@@ -138,8 +202,10 @@ def get_cameraname():
 
 # ##--------------------------------------
 @app.route('/get_modelname', methods=['GET'])
+@log_route_info_to_db
+# @login_required
 def get_modelname():
-    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender']
+    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender' , 'clothes color']
     return jsonify(modelname)
 
 # ##--------------------------------------
@@ -148,11 +214,29 @@ def get_sourcetype():
     sourcetype = ['WEBCAM' , 'RTSP' , 'URL']
     return jsonify(sourcetype)
 
+# ##--------------------------------------
+@app.route("/get_colosList" , methods = ['GET'])
+def get_colorsList():
+    colorsList =[
+        'Red'     ,
+        'Blue'    ,
+        'Green' ,       
+        'Yellow' ,   
+        'Purple' ,
+        'Cyan' ,     
+        'Orange' ,
+        'Brown',
+        'Black' ,
+        'White' ]
+    return jsonify(colorsList)
+
+
 #____________________________________________________________
 #################### MAIN FUNCTIONALITY #####################
 #____________________________________________________________
 @app.route('/addCamera', methods=['POST'])
-# @login_required
+@log_route_info_to_db
+@login_required
 def add_camera():
     data = request.form
     if not data:
@@ -170,6 +254,7 @@ def add_camera():
 
 #____________________________________________________________
 @app.route('/applyModel', methods=['GET', 'POST'])
+@log_route_info_to_db
 # @login_required
 def apply_Model():
     data = request.form
@@ -178,11 +263,11 @@ def apply_Model():
 
     camera_name = data.get('cameraname')
     model_name = data.get('modelname')
-    print(type(model_name))
-    print(model_name)
+    # print(type(model_name))
+    # print(model_name)
     model_name = [name.strip().strip('"') for name in model_name.strip("[]").replace("'", "").split(",")]
-    print(type(model_name))
-    print(model_name)
+    # print(type(model_name))
+    # print(model_name)
 
     if not all([camera_name, model_name]):
         return jsonify({'mess': "Incomplete model data provided" })
@@ -196,7 +281,8 @@ def apply_Model():
 ###################### QUERY FUNCTIONS ######################
 #____________________________________________________________
 @app.route('/camcountavg', methods=['GET', 'POST']) 
-# @login_required 
+@log_route_info_to_db
+# @login_required
 def camcountavg(): 
     data = request.form 
     if not data: 
@@ -213,7 +299,8 @@ def camcountavg():
 
 #____________________________________________________________
 @app.route('/camcountperH', methods =['POST'])
-#@login_required
+@log_route_info_to_db
+# @login_required
 def camcountperH():
     data = request.form
     if not data:
@@ -230,7 +317,8 @@ def camcountperH():
 
 #____________________________________________________________
 @app.route('/camcountperM', methods =['POST','GET'])
-#@login_required
+@log_route_info_to_db
+# @login_required
 def camcountperM():
     data = request.form
     if not data:
@@ -246,7 +334,8 @@ def camcountperM():
 
 #____________________________________________________________
 @app.route('/camcountperY', methods =['POST','GET'])
-#@login_required
+@log_route_info_to_db
+# @login_required
 def camcountperY():
     data = request.form
     if not data:
@@ -281,6 +370,7 @@ def camcountperY():
 
 #____________________________________________________________
 @app.route('/postcam_geteachmodelstat', methods=['POST'])
+@log_route_info_to_db
 #@login_required
 def postcam_geteachmodelstat_route():
     data = request.form
@@ -295,6 +385,7 @@ def postcam_geteachmodelstat_route():
 
 #____________________________________________________________
 @app.route('/postcam_getallmodelsStat', methods =['POST','GET'])
+@log_route_info_to_db
 #@login_required
 def postcam_getallmodelsStat_route():
     data = request.form
@@ -311,6 +402,7 @@ def postcam_getallmodelsStat_route():
 
 #____________________________________________________________
 @app.route('/postcam_geteachmodelperH', methods =['POST','GET'])
+@log_route_info_to_db
 #@login_required
 def postcam_geteachmodelperH_route():
     data = request.form
@@ -330,6 +422,7 @@ def postcam_geteachmodelperH_route():
 
 #____________________________________________________________
 @app.route('/postcam_getallmodelsperH', methods =['POST','GET'])
+@log_route_info_to_db
 #@login_required
 def postcam_getallmodelsperH_route():
     data = request.form
@@ -348,16 +441,9 @@ def postcam_getallmodelsperH_route():
     return jsonify(dictionary)  
 
 
-
-
-
-
-
-
-
-
 #____________________________________________________________
 @app.route('/eachmodelstatistics' , methods = ['POST'])
+@log_route_info_to_db
 #@login_required
 def eachmodelstatistics():
         data = request.form
@@ -403,6 +489,7 @@ def eachmodelstatistics():
 
 #____________________________________________________________
 @app.route('/allmodelsstatistics' , methods = ['POST'])
+@log_route_info_to_db
 #@login_required
 def allmodelsstatistics():
         data = request.form
@@ -451,10 +538,10 @@ def allmodelsstatistics():
                 return jsonify(dictionary)
 
 
-
-
 #____________________________________________________________
 @app.route('/getallmodelsincam', methods=['POST'])
+@log_route_info_to_db
+# @login_required
 def getallmodelsincam():
     data = request.form
     if not data:
@@ -465,9 +552,10 @@ def getallmodelsincam():
     return jsonify(dictionary)
 
 
-
 #____________________________________________________________
 @app.route('/getallcamsinmodel', methods=['POST'])
+@log_route_info_to_db
+# @login_required
 def getallcamsinmodel():
     data = request.form
     if not data:
@@ -477,8 +565,86 @@ def getallcamsinmodel():
     dictionary = all_cameras_in_model(modelname)
     return jsonify(dictionary)
 
+#____________________________________________________________
+@app.route("/colorDocs" , methods = ['POST'])
+@log_route_info_to_db
+# @login_required
+def coloeDocs():
+    data = request.form 
+    if not data :
+        return jsonify({"mess" : "No data provided"})
+    
+    color = data.get('color')
+    cameraname = data.get('cameraname')
+    docs = clothes_filtering(cameraname , color)
+
+    return jsonify(docs)
+
+#____________________________________________________________
+@app.route("/genderCount_Docs" , methods = ['POST'])
+@log_route_info_to_db
+# @login_required
+def genderCount_Docs():
+        data = request.form
+        if not data:
+            return jsonify({'mess': "No data provided" }) 
+        
+        cameraName = data.get('cameraname')
+        day = data.get('day')
+        month = data.get('month')
+        year = data.get('year')
 
 
+        Male = None 
+        Female = None 
+        docs = None 
+
+        if  cameraName and day and month and year :
+            docs = gender_filtering_date_aggrigates(cameraName, day, month, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+
+
+        elif cameraName and not day and month and year:
+            docs  = gender_filtering_month_aggregates(cameraName, month, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+
+        elif cameraName and not day and not month and year:
+            docs = gender_filtering_year_aggregates(cameraName, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+@app.route('/display_stream'  ,methods=['POST','GET'])
+def display_stream() :
+    
+    data = request.args
+    #data = request.form 
+    print(data)
+    if not data:
+             return jsonify({'mess': "No data provided" }) 
+        
+    cameraName = data.get('cameraname') 
+    #cameraName = 'aslom'
+    try :
+        return Response(display_streaming(cameraName),mimetype='multipart/x-mixed-replace; boundary=frame')
+    except :
+        return jsonify({'mess' : 'Can\'t Display'})
+
+    
+#____________________________________________________________
+#____________________________________________________________
 
 #____________________________________________________________
 # collection = db['CameraInfo']
@@ -496,9 +662,14 @@ def get_camera_names():
     print(cam_list)
     return jsonify(cam_list)
 
+
+
 #____________________________________________________________
 if __name__ == '__main__':
     # Start change stream watcher in a separate thread
     # change_stream_thread = Thread(target=watch_changes)
     # change_stream_thread.start()
     app.run(host='0.0.0.0',port=8080 , debug=True)
+
+
+
