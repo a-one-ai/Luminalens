@@ -61,7 +61,7 @@ def readSource(srcType, src):
     global capture 
     try: 
         if srcType == 'WEBCAM': 
-            capture = cv2.VideoCapture(src) 
+            capture = cv2.VideoCapture(int(src)) 
             fps = 30 
         elif srcType == 'RTSP': 
             capture = cv2.VideoCapture(src) 
@@ -241,6 +241,11 @@ def run_models(modelName, frame, cameraName):
             path, res = detect_GENDER(frame  , cameraName)
             results.append((path, res, cameraName, model))
 
+        elif model == 'clothes color':
+            path, res = human_clothing(frame  , cameraName)
+            results.append((path, res, cameraName, model))
+
+
     return results
 
 # ##----------------------------------------
@@ -312,6 +317,27 @@ def videoFeedMulti(cameraName, modelNames):
     cv2.destroyAllWindows()
 
 # ##----------------------------------------
+# def multiModelRunInsert(cameraName, modelNames):
+#     """
+#     Processes video frames from a camera for multiple specified models simultaneously and inserts the results into a database.
+
+#     Args:
+#         cameraName (str): Name of the camera.
+#         modelNames (list of str): List of model names to process frames.
+#     """
+#     try:
+#         results_generator = videoFeedMulti(cameraName, modelNames)
+#         for results in results_generator:
+#             for result in results:
+#                 path, res, cameraName, modelName = result
+#                 insert_model_info(cameraName, modelName, res, path)
+#     except Exception as e:
+#         print(f"Error in multiModelRunInsert: {e}")
+#     finally:
+#         # Release resources
+#         cv2.destroyAllWindows()
+
+
 def multiModelRunInsert(cameraName, modelNames):
     """
     Processes video frames from a camera for multiple specified models simultaneously and inserts the results into a database.
@@ -320,14 +346,72 @@ def multiModelRunInsert(cameraName, modelNames):
         cameraName (str): Name of the camera.
         modelNames (list of str): List of model names to process frames.
     """
+    path = ""
     try:
         results_generator = videoFeedMulti(cameraName, modelNames)
         for results in results_generator:
             for result in results:
                 path, res, cameraName, modelName = result
-                insert_model_info(cameraName, modelName, res, path)
+                print(res)
+                # Convert res to a compatible type
+                res_encoded = res.tolist() if isinstance(res, np.ndarray) else res
+                try:
+                    if  (isinstance (res_encoded,list) ) and (len(res_encoded) == 0):
+                        continue                    
+                    insert_model_info(cameraName, modelName, res_encoded, path)
+                except Exception as insert_error:
+                    print(f"Error inserting model info for path '{path}': {insert_error}")
     except Exception as e:
         print(f"Error in multiModelRunInsert: {e}")
     finally:
         # Release resources
         cv2.destroyAllWindows()
+
+
+def display_streaming(cameraName):
+    """
+    Generates frames from a video feed and processes each frame using a specified model.
+
+    Args:
+        cameraName (str): Name of the camera.
+        modelName (str): Name of the model to process frames.
+
+    Yields:
+        tuple: (path, res, cameraName, modelName) - Path of the processed image, result from the model,
+            camera name, and model name.
+    """
+    query = {'Camera Name': cameraName}
+
+    try:
+        src = int(find_existing_document(db['CameraInfo'], query)['Port'])
+    except  Exception:
+        src = str(find_existing_document(db['CameraInfo'], query)['Link'])
+
+    srcType = find_existing_document(db['CameraInfo'], query)['Source Type']
+
+    print(src, srcType)
+
+    cap,fps = readSource(srcType, src)
+
+    if cap is None:
+        print("Error: Capture object is None.")
+        return
+
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        else:
+       
+            _,buffer=cv2.imencode('.jpg',frame)
+            frame=buffer.tobytes()
+    
+            
+
+        yield(b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    cap.release()
+    cv2.destroyAllWindows()
+    

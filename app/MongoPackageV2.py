@@ -6,6 +6,8 @@ import math
 from pymongo.errors import OperationFailure
 from time import sleep
 import calendar
+import pprint
+
 
 # Global variables for client and database connection
 global client, db
@@ -126,8 +128,11 @@ def insert_model_info(CameraName, ModelName, Label, FramePath):
         existing_collection = db['ModelCountingData']
     elif ModelName == 'crowded':
         existing_collection = db['ModelCrowdedData']
-    elif ModelName == 'Gender':
+    elif ModelName == 'gender':
         existing_collection = db['ModelGenderData']
+    elif ModelName == 'clothes color':
+        existing_collection = db['ModelClothesColorData']
+
 
     current_time_utc = datetime.utcnow()
     egypt_tz = pytz.timezone('Africa/Cairo')
@@ -204,8 +209,12 @@ def date_filter_aggerigates_df(CameraName, ModelName, day, month, year):
         'crowdedDensity': 'ModelDensityData',
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
-        'Gender': 'ModelGenderData'
+        'Gender': 'ModelGenderData',
+        'clothes color': 'ModelClothesColorData'
+        
     }
+
+
 
     # Get the collection based on ModelName
     collection_name = model_collection_mapping.get(ModelName)
@@ -467,8 +476,6 @@ def average_camera_count(CameraName, ModelName):
         }
         return nulldic
 
-
-
 #____________________________________________________________
 def postcam_geteachmodelstat(CameraName):
     """
@@ -532,8 +539,6 @@ def postcam_geteachmodelstat(CameraName):
 
     return df
 
-
-# print(postcam_geteachmodelstat('test'))
 #____________________________________________________________
 # all models in all time
 def postcam_getallmodelsStat(CameraName):
@@ -665,6 +670,7 @@ def postcam_geteachmodelperH(CameraName, day, month, year):
 
 #____________________________________________________________
 # all models in specific day
+# all models in specific day
 def postcam_getallmodelsperH(CameraName, day, month, year):
     """
     Filter data by date and get the average count in the form of time range for all models applied to a specific camera.
@@ -693,12 +699,12 @@ def postcam_getallmodelsperH(CameraName, day, month, year):
     }
 
     data = []
-    try :
+    try:
         for ModelName, collection_name in model_collection_mapping.items():
             existing_collection = db[collection_name]
 
             query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
-            
+
             if check_existing_document(existing_collection, query):
                 print(f'{CameraName} Camera Found in {ModelName} Collection')
                 pipeline = [
@@ -712,33 +718,51 @@ def postcam_getallmodelsperH(CameraName, day, month, year):
                 if result:
                     for item in result:
                         hour = item['Hour'] + 2
+                        formatted_hour = hour if hour <= 12 else hour - 12
                         average_count = item['Count Average']
+                        am_pm = "PM" if hour >= 12 else "AM"
+                        time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1 if formatted_hour < 12 else 1} {am_pm}"
+                        if time_range == '12 PM - 13 PM' :
+                                time_range = time_range.replace(time_range,'12 PM - 1 PM')                           
+                        data.append({'Model': ModelName, 'Time Range': time_range, 'Count Average': average_count})
+
+
+                    for hour in range(24):
                         am_pm = "PM" if (hour) >= 12 else "AM"
                         formatted_hour = (hour) if (hour) <= 12 else (hour) - 12
                         time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
-                        
-                        data.append({'Model': ModelName, 'Time Range': time_range, 'Count Average': average_count}) 
-                        
-                    for hour in range(24):
-                        am_pm = "PM" if (hour + 2) >= 12 else "AM"
-                        formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
-                        time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
-                        data.append({'Model': ModelName, 'Time Range': time_range, 'Count Average': 0})                          
 
-                    break                                              
-                    
 
-        if len(data) == 0 :
-                dictionary = {'Camera Name' :CameraName ,'Time Range' :TargetDate ,'Count Average' :0 , 'Model' : 'Not Found'  }
-                return dictionary
-        else :
-            df =  pd.DataFrame(data)
+                        data.append({'Model': ModelName, 'Time Range': time_range, 'Count Average': 0})
+
+                    break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate, 'Count Average': 0, 'Model': 'Not Found'}
+            return dictionary
+        else:
+            df = pd.DataFrame(data)
             df['Camera Name'] = CameraName
-            df = df.drop_duplicates(subset='Time Range',keep='first')            
-            return df        
-    
-    except :
-        dictionary = {'Camera Name' :CameraName ,'Time Range' : 'Null', 'Count Average' :0 , 'Models' : 'Not Found'  }
+
+            # Define the order of time ranges
+            df = df.sort_values(by=['Time Range', 'Count Average'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+            # Define the order of time ranges
+            time_range_order = [f"{i} AM - {i + 1} AM" if i != 12 else f"{i} AM - {i + 1} PM" for i in range(12)]
+            time_range_order.extend([f"{i} PM - {i + 1} PM" if i != 12 else f"{i} PM - {i + 1} AM" for i in range(12)])
+            ind =  time_range_order.index('0 PM - 1 PM')
+            time_range_order[ind] = '12 PM - 1 PM'
+
+            # Convert 'Time Range' column to categorical with predefined order
+            df['Time Range'] = pd.Categorical(df['Time Range'], categories=time_range_order, ordered=True)
+
+            # Sort DataFrame by 'Time Range'
+            df.sort_values(by='Time Range', inplace=True)
+            df.dropna(inplace=True)
+            return df
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': 'Null', 'Count Average': 0, 'Models': 'Not Found'}
         return dictionary
 #print(postcam_getallmodelsperH('aslom',19,2,2024))
     
@@ -972,8 +996,13 @@ def postcam_geteachmodelperY(CameraName, year):
     if len(data) == 0 :
             dictionary = {'Camera Name' :CameraName , 'Count Average' :0 , 'Model' : 'Not Found'  }
             return dictionary
-    else :                
-        return final_df
+    else :
+        # Sort by month order
+        month_order = list(calendar.month_name)[1:]  # Remove the first element which is an empty string
+        final_df['Month'] = pd.Categorical(final_df['Time Range'], categories=month_order, ordered=True)
+        final_df.sort_values('Month', inplace=True)
+        final_df.drop(columns='Month', inplace=True)  # Remove temporary 'Month' column used for sorting
+        return final_df                             
 
 #print(postcam_geteachmodelperY('Ro7Elsharq',2024))    
 #____________________________________________________________________________    
@@ -1056,9 +1085,13 @@ def postcam_getallmodelsperY(CameraName, year):
     if len(data) == 0 :
             dictionary = {'Camera Name' :CameraName , 'Count Average' :0 , 'Model' : 'Not Found'  }
             return dictionary
-    else :                
-        return final_df
-
+    else :             
+        # Sort by month order
+        month_order = list(calendar.month_name)[1:]  # Remove the first element which is an empty string
+        final_df['Month'] = pd.Categorical(final_df['Time Range'], categories=month_order, ordered=True)
+        final_df.sort_values('Month', inplace=True)
+        final_df.drop(columns='Month', inplace=True)  # Remove temporary 'Month' column used for sorting
+        return final_df                
     
 #print(postcam_getallmodelsperY('Ro7Elsharq',2024))
 
@@ -1071,7 +1104,10 @@ def all_cameras_in_model(ModelName) :
         'crowdedDensity': 'ModelDensityData',
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
-        'gender': 'ModelGenderData' }
+        'gender': 'ModelGenderData',
+        'clothes color': 'ModelClothesColorData'
+
+          }
 
     # Get the collection based on ModelName
     collection_name = model_collection_mapping.get(ModelName)
@@ -1096,7 +1132,9 @@ def all_models_in_camera(CameraName) :
         'crowdedDensity': 'ModelDensityData',
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
-        'gender': 'ModelGenderData' }
+        'gender': 'ModelGenderData',
+        'clothes color': 'ModelClothesColorData'
+}
     
     models_list = []
     
@@ -1127,7 +1165,9 @@ def all_camera_info(CameraName) :
             'crowdedDensity': 'ModelDensityData',
             'crossingBorder': 'ModelCountingData',
             'crowded': 'ModelCrowdedData',
-            'gender': 'ModelGenderData' }
+            'gender': 'ModelGenderData',
+            'clothes color': 'ModelClothesColorData'
+ }
         
         models_list = []
     
@@ -1147,8 +1187,13 @@ def all_camera_info(CameraName) :
             dictionary = dict()
             dictionary['Camera Name'] = CameraName
             dictionary['Camera Info'] = data
-            dictionary['Models'] = models_list            
-            return dictionary
+            dictionary['Models'] = models_list
+            try :
+                dictionary['Camera Info']['Source'] = dictionary['Camera Info'].pop('Link')
+            except :
+                dictionary['Camera Info']['Source'] = dictionary['Camera Info'].pop('Port')
+
+            return dictionary                        
     else :
         dictionary = dict()
         dictionary['Camera Name'] = CameraName
@@ -1157,3 +1202,311 @@ def all_camera_info(CameraName) :
         return dictionary
     
 #print(all_camera_info('Ro7Elsharq'))
+    
+def clothes_filtering(CameraName, color):
+    existing_collection = db['ModelClothesColorData']
+    colors_list = [
+        'Red'     ,
+        'Blue'    ,
+        'Green' ,       
+        'Yellow' ,   
+        'Purple' ,
+        'Cyan' ,     
+        'Orange' ,
+        'Brown',
+        'Black' ,
+        'White' ]
+    if color in colors_list :
+        
+        query = {'Camera Info.Camera Name': CameraName}
+        
+        if check_existing_document(existing_collection, query):
+            # Search for documents containing the specified color
+            query = {"Label": {"$elemMatch": {"clothes": {"$elemMatch": {"Dominant Color Name": color}}}}}
+            result = existing_collection.find(query)  
+            matching_documents = []
+            for doc in result:
+                matching_label = []
+                for label in doc['Label']:
+                    matching_clothes = []
+                    if isinstance(label.get('clothes', []), list):  # Check if 'clothes' is a list
+                        for cloth in label['clothes']:
+                            if isinstance(cloth, dict) and cloth.get('Dominant Color Name') == color:
+                                matching_clothes.append(cloth)
+                    if matching_clothes:
+                        matching_label.append({'Person ID': label['Person ID'], 'clothes': matching_clothes})
+                doc_copy = doc.copy()  # Create a copy of the document
+                del doc_copy['_id']  # Remove the _id field
+                del doc_copy['Camera Info']['_id']
+                del doc_copy['Model Name']
+                doc_copy['Label'] = matching_label  # Replace 'Label' with filtered clothes
+                matching_documents.append(doc_copy)
+            if len(matching_documents) == 0 :
+                dictionary = {'CameraName' :CameraName , 'Model' :'clothes color' , 
+                            'EnteredColor' :color , 'Data' :'No Data Found'}            
+                return dictionary
+            
+            else :
+                dictionary = {'CameraName' :CameraName , 'Model' :'clothes color' ,
+                            'EnteredColor' :color , 'Data' :matching_documents}            
+                return dictionary
+        else: 
+            dictionary = {'CameraName' : CameraName ,
+                        'Data' : 'Camera is not inserted' }       
+            return dictionary 
+    else :
+        dictionary = {'CameraName' : CameraName ,
+                        'Error' : 'Please Enter Color from the list' }       
+        return dictionary   
+
+
+# colors_list = [
+#         'Red'     ,
+#         'Blue'    ,
+#         'Green' ,       
+#         'Yellow' ,   
+#         'Purple' ,
+#         'Cyan' ,     
+#         'Orange' ,
+#         'Brown',
+#         'Black' ,
+#         'White' ]             
+# # # Example usage:
+# data = clothes_filtering('ClothesTest', 'Yellow')
+# pprint.pprint(data)
+    
+def gender_filtering_date_aggrigates(CameraName, day, month, year):
+    
+    """
+    Filter data by date and get the average count in the form of time range.
+
+    Args:
+        CameraName (str): Name of the camera.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing time range, total count for male, and total count for female.
+    """
+    # Ensure month and day are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    # Construct target date string
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    existing_collection = db['ModelGenderData']
+    
+    # Query to filter by camera name and date
+    query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+    data = []
+    if check_existing_document(existing_collection, query):
+        print(f'{CameraName} Camera Found in Gender Collection')
+        
+        pipeline = [
+            {"$match": query},
+            {"$unwind": "$Label"},
+            {"$group": {
+                "_id": {
+                    "Hour": {"$hour": "$Timestamp"},
+                    "Gender": "$Label.Gender"
+                },
+                "count": {"$sum": 1}
+            }},
+            {"$project": {
+                "Hour": "$_id.Hour",
+                "Gender": "$_id.Gender",
+                "Count": "$count",
+                "_id": 0
+            }},
+            {"$sort": {"Hour": 1}}
+        ]
+
+
+        result = list(existing_collection.aggregate(pipeline))
+        if result:
+            
+            for item in result:
+                hour = item['Hour']
+                gender = item['Gender']
+                count = item['Count']
+                
+                # Adjusting hour for display
+                am_pm = "PM" if (hour + 2) >= 12 else "AM"
+                formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
+                time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
+                
+                data.append({
+                    'Time Range': time_range,
+                    'Gender': gender,
+                    'Count': count,
+                })
+
+                for hour in range(24):
+                        am_pm = "PM" if (hour) >= 12 else "AM"
+                        formatted_hour = (hour) if (hour) <= 12 else (hour) - 12
+                        time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
+                
+                        data.append({
+                            'Time Range': time_range,
+                            'Gender': gender,
+                            'Count': 0,
+                        })
+
+                        
+            
+            # Create DataFrame from collected data
+            df = pd.DataFrame(data)
+            
+            # Pivot DataFrame to get male and female counts separately
+            df_pivot = df.pivot_table(index='Time Range', columns='Gender', values='Count', aggfunc='sum', fill_value=0)
+            
+            # Reset index to make 'Time Range' a column
+            df_pivot.reset_index(inplace=True)
+            
+            # Rename columns for clarity
+            df_pivot.columns.name = None
+            
+            # Add a total count column
+            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+            df_pivot['Camera Name'] = CameraName           
+            
+
+    if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
+                              'Female' : 0 ,'Male' :0, 'Total Count': 0}
+                return dictionary
+    else :
+
+            # Define the order of time ranges
+            df = df_pivot.sort_values(by=['Time Range', 'Total Count'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+            # Define the order of time ranges
+            time_range_order = [f"{i} AM - {i + 1} AM" if i != 12 else f"{i} AM - {i + 1} PM" for i in range(12)]
+            time_range_order.extend([f"{i} PM - {i + 1} PM" if i != 12 else f"{i} PM - {i + 1} AM" for i in range(12)])
+            ind =  time_range_order.index('0 PM - 1 PM')
+            time_range_order[ind] = '12 PM - 1 PM'
+
+            # Convert 'Time Range' column to categorical with predefined order
+            df['Time Range'] = pd.Categorical(df['Time Range'], categories=time_range_order, ordered=True)
+
+            # Sort DataFrame by 'Time Range'
+            df.sort_values(by='Time Range', inplace=True)
+            df.dropna(inplace=True)
+            return df          
+#print(gender_filtering_date_aggrigates('GenderTest',28,2,2024))   
+    
+def gender_filtering_month_aggregates(CameraName, month, year):
+
+    """
+    Filter data by month and get the total count for male and female for each day.
+
+    Args:
+        CameraName (str): Name of the camera.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing total count for male and female for each day.
+    """
+    # Ensure month is zero-padded if less than 10
+    month = int(month)
+    year = int(year)
+    month_str = str(month).zfill(2)
+    # Get the number of days in the month
+    num_days = calendar.monthrange(year, month)[1]
+
+    # Initialize an empty list to store data for all days in the month
+    data = []
+
+    # Iterate over all days in the month
+    for day in range(1, num_days + 1):
+        # Retrieve data for the specific day using the existing function
+        daily_data = gender_filtering_date_aggrigates(CameraName, day, month, year)
+        
+        # If there's no data for the day, add zeros for male and female counts
+        if isinstance(daily_data, dict): # If there's no data for the day
+            data.append({
+                'Camera Name': CameraName,
+                'Time Range': f"{year}-{month_str}-{str(day).zfill(2)}",
+                'Male': 0,
+                'Female': 0,
+                'Total Count': 0
+            })
+        else:
+            # Calculate the total count for male and female for the day
+            male_count = daily_data['Male'].sum()
+            female_count = daily_data['Female'].sum()
+            total_count = male_count + female_count
+            
+            # Add the data for the day to the list
+            data.append({
+                'Camera Name': CameraName,
+                'Time Range': f"{year}-{month_str}-{str(day).zfill(2)}",
+                'Male': male_count,
+                'Female': female_count,
+                'Total Count': total_count
+            })
+
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(data)
+
+    # Return the DataFrame
+    return df     
+
+#print(gender_filtering_month_aggregates('GenderTest',2,2024))    
+
+def gender_filtering_year_aggregates(CameraName, year):
+    """
+    Filter data by year and get the total count for male and female for each month.
+
+    Args:
+        CameraName (str): Name of the camera.
+        year (int): Year component.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing total count for male and female for each month.
+    """
+    # Initialize an empty list to store data for all months in the year
+    data = []
+    year = int(year)
+
+    # Iterate over all months in the year
+    for month in range(1, 13):
+        # Get the number of days in the month
+        num_days = calendar.monthrange(year, month)[1]
+
+        # Initialize counters for male and female counts for the month
+        male_count_month = 0
+        female_count_month = 0
+
+        # Iterate over all days in the month
+        for day in range(1, num_days + 1):
+            # Retrieve data for the specific day using the existing function
+            daily_data = gender_filtering_date_aggrigates(CameraName, day, month, year)
+            
+            # If there's data for the day, sum the male and female counts
+            if not isinstance(daily_data, dict): # If there's no data for the day
+                male_count_month += daily_data['Male'].sum()
+                female_count_month += daily_data['Female'].sum()
+
+        # Calculate the total count for the month
+        total_count_month = male_count_month + female_count_month
+        
+        # Add the aggregated data for the month to the list
+        data.append({
+            'Camera Name': CameraName,
+            'Time Range': calendar.month_name[int(month)],
+            'Year' : year ,
+            'Male': male_count_month,
+            'Female': female_count_month,
+            'Total Count': total_count_month
+        })
+
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(data)
+
+    # Return the DataFrame
+    return df
+
+#print(gender_filtering_year_aggregates('GenderTest',2024))    
