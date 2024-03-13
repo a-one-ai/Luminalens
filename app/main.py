@@ -297,6 +297,12 @@ def get_all_cameras_vechile_count():
     return jsonify(vehcile_count_data)
 
 
+# ##--------------------------------------
+@app.route('/get_running_now_info', methods=['GET'])
+def get_running_now_info():
+    running_now_detials = all_running_now_data()
+    return jsonify(running_now_detials)
+
 
 #____________________________________________________________
 #################### MAIN FUNCTIONALITY #####################
@@ -479,7 +485,7 @@ def stopProcessingCamera():
     return redirect(url_for('DeleteCameraDocs',camera_name = camera_name))
 
 @app.route('/DeleteCameraDocs', methods=['GET'])
-def Delete():
+def DeleteCameraDocs():
     camera_name = request.args.get('camera_name')
     print(camera_name)
     status_delete = delete_documents_for_camera(db['RunningNow'], camera_name)
@@ -490,6 +496,24 @@ def Delete():
 
 
 #____________________________________________________________
+# @app.route('/stopCameraModel', methods=['POST'])
+# @log_route_info_to_db
+# def disable_camera_model():
+#     data = request.form
+#     if not data:
+#         return jsonify({'mess': "No data provided" })
+
+#     camera_name = data.get('cameraname')
+#     model_name = data.get('modelname')
+#     model_name = [name.strip().strip('"') for name in model_name.strip("[]").replace("'", "").split(",")]
+#     print(type(model_name))
+#     print(model_name)    
+#     for model in model_name : 
+#         disable_model_for_camera(camera_name,model)    
+#         print('Model Stopped :', model_name ,' For ', camera_name)
+#         # disable_model_for_camera(camera_name, model_name)
+#     return jsonify({'message': f"Model {model_name} disabled for camera '{camera_name}'."})
+
 @app.route('/stopCameraModel', methods=['POST'])
 @log_route_info_to_db
 def disable_camera_model():
@@ -498,19 +522,55 @@ def disable_camera_model():
         return jsonify({'mess': "No data provided" })
 
     camera_name = data.get('cameraname')
+    print(camera_name)
     model_name = data.get('modelname')
     model_name = [name.strip().strip('"') for name in model_name.strip("[]").replace("'", "").split(",")]
     print(type(model_name))
     print(model_name)    
-    for model in model_name : 
-        disable_model_for_camera(camera_name,model)    
-        print('Model Stopped :', model_name ,' For ', camera_name)
-        # disable_model_for_camera(camera_name, model_name)
-    return jsonify({'message': f"Model {model_name} disabled for camera '{camera_name}'."})
+    running_now_data = all_running_now_data()
+    print(running_now_data)
+    for data in running_now_data :
+        # print(data)
+        if (data['Camera Name'] == camera_name) :
+            models_applied = data['Models Applied']
+            models_to_remove = model_name
+            models_updated_list = [item for item in models_applied if item not in models_to_remove]
+            print(models_updated_list)    
+            stop_processing_for_camera(camera_name)
+            status_delete = delete_documents_for_camera(db['RunningNow'], camera_name)
+            print(status_delete)
+            if status_delete == True:            
+                apply_Model_Testing(cameraName=camera_name, modelNames=models_updated_list, duration=15)
+                # print(satus_list)
+                if all(satus_list) :
+                    print('Tested For 15 Second and All is Good')
+                    # Start the long-running task in a separate thread
+                    task_thread = Thread(target=apply_Model, args=(camera_name, models_updated_list))
+                    task_thread.start()                
+                    return jsonify({
+                        'Models Run Before' : models_applied ,                              
+                       'Removed Models' : models_to_remove,                                    
+                       'Running Now Models' : f'{models_updated_list}',
+                       'Camera Name' : camera_name ,
+                       'mess': f'Apply Models {models_updated_list} started in the background for {camera_name} camera',
+                       'test' : 'Testing for 15 seconda and All is Good',
 
-
-
-
+                            })                    
+                    
+                else :
+                    return jsonify({
+                        'Models Run Before' : models_applied ,                              
+                       'Removed Models' : models_to_remove,                                    
+                       'Running Now Models' : f'{models_updated_list}',
+                       'Camera Name' : camera_name ,
+                        'mess': f'Apply Models {models_updated_list} cannot in the background for {camera_name} camera',
+                        'test' : 'Testing for 15 seconds and Error during Tested',
+                            })      
+            
+            else :
+                return jsonify({'mess' : 'Unexpected Error Canot Delete From RunningNow Collection'})      
+        
+                     
 @app.route('/app_resources', methods=['GET'])
 def app_resources():
     try:
@@ -1212,7 +1272,3 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0',port=8080 , debug=False)    
 
     # change_stream_thread.join()        
-
-
-
-

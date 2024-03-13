@@ -1711,7 +1711,9 @@ def VoilenceFilteringH(CameraName, day, month, year):
         print(f'No Documents found for {CameraName} on {TargetDate}')
 
         dic = {'Time Range': TargetDate, 'Data': [] , 'Camera Name' :CameraName}        
-        return dic
+        # return dic
+        return [dic]
+    
 
 
 
@@ -1787,7 +1789,8 @@ def VoilenceFilteringM(CameraName, month, year):
             'Time Range': f"{year}-{month_str}",
             'Camera Name': CameraName,
             'Data': []        }
-        return data
+        # return data
+        return [data]
 
 # result = VoilenceFilteringM('VoilenceTest', 3, 2024)
 # pprint.pprint(result)
@@ -1883,7 +1886,9 @@ def VoilenceFilteringY(CameraName, year):
         data = {'Time Range': year,
                 'Camera Name': CameraName,
                 'Data': []}
-        return data
+        # return data
+        return [data]
+    
     
 # result = VoilenceFilteringY('VoilenceTest', 2024)
 # pprint.pprint(result)
@@ -2926,7 +2931,7 @@ def get_all_vechile_count_perH(day, month, year):
             # all_data.append(dictionary)
     return all_data
 
-pprint.pprint(get_all_vechile_count_perH(28,2,2024))
+# pprint.pprint(get_all_vechile_count_perH(28,2,2024))
 
 def get_all_vechile_count_perM(month, year):
 
@@ -3566,3 +3571,32 @@ def all_cameras_in_violence():
 
     camera_names =distinct_camera_names
     return camera_names
+
+def all_running_now_data():
+    existing_collection = db['RunningNow']
+    result = existing_collection.find()
+    
+    model_names_dict = {}
+    for doc in result:
+        camera_name = doc.get('Camera Name')
+        model_name = doc.get('Model Name')
+        
+        if camera_name not in model_names_dict:
+            model_names_dict[camera_name] = [model_name]
+        else:
+            model_names_dict[camera_name].append(model_name)
+    
+    running_now_data = [{'Camera Name': camera, 'Models Applied': model_list} for camera, model_list in model_names_dict.items()]
+    return running_now_data
+
+# running_now_data = all_running_now_data()
+# print(running_now_data)
+
+# for data in running_now_data :
+#     print(data)
+#     if (data['Camera Name'] == 'aslom') :
+#         list__ = data['Models Applied']
+#         items_to_remove = ['gender']
+#         updated_list = [item for item in list__ if item not in items_to_remove]
+#         print(updated_list)
+
