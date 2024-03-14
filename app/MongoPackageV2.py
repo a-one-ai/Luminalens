@@ -3600,3 +3600,50 @@ def all_running_now_data():
 #         updated_list = [item for item in list__ if item not in items_to_remove]
 #         print(updated_list)
 
+
+def update_camera_status_models_collection(CameraName):
+    
+    collection_mapping = {
+        'violence': 'ModelViolenceData',
+        'vehicle': 'ModelVehicleData',
+        'crowdedDensity': 'ModelDensityData',
+        'crossingBorder': 'ModelCountingData',
+        'crowded': 'ModelCrowdedData',
+        'gender': 'ModelGenderData',
+        'clothes color': 'ModelClothesColorData'
+    }
+    new_status = 'OFF'
+    for model_name, collection_name in collection_mapping.items():
+        existing_collection = db[collection_name] 
+        query = {'Camera Info.Camera Name': CameraName}
+        if check_existing_document(existing_collection, query):
+            update_query = {"$set": {"Camera Info.Status": new_status}}
+            existing_collection.update_many(query, update_query)
+            print(f"Updated status for colllection '{model_name}' documents containing camera '{CameraName}' to '{new_status}'.")            
+
+
+
+# update_camera_status_models_collection('VoilenceTest')
+
+def update_camera_status_specific_models(CameraName, models):
+    collection_mapping = {
+        'violence': 'ModelViolenceData',
+        'vehicle': 'ModelVehicleData',
+        'crowdedDensity': 'ModelDensityData',
+        'crossingBorder': 'ModelCountingData',
+        'crowded': 'ModelCrowdedData',
+        'gender': 'ModelGenderData',
+        'clothes color': 'ModelClothesColorData'
+    }
+    new_status = 'OFF'
+    for model_name in models:
+        if model_name in collection_mapping:
+            collection_name = collection_mapping[model_name]
+            existing_collection = db[collection_name]
+            query = {'Camera Info.Camera Name': CameraName}
+            if check_existing_document(existing_collection, query):
+                update_query = {"$set": {"Camera Info.Status": new_status}}
+                existing_collection.update_many(query, update_query)
+                print(f"Updated status for collection '{model_name}' documents containing camera '{CameraName}' to '{new_status}'.")
+        else:
+            print(f"Model '{model_name}' not found in the collection mapping.")

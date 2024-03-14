@@ -8,6 +8,8 @@ from bson import ObjectId
 import os 
 import warnings
 from MongoPackageV2 import *
+from MongoPackageV2 import update_camera_status_models_collection
+from MongoPackageV2 import update_camera_status_specific_models
 from functools import wraps
 import jwt
 import secrets
@@ -481,7 +483,8 @@ def stopProcessingCamera():
         return jsonify({'mess': "Incomplete camera data provided" })
     
     stop_processing_for_camera(camera_name)
-
+    update_camera_status_models_collection(camera_name)                       
+    
     return redirect(url_for('DeleteCameraDocs',camera_name = camera_name))
 
 @app.route('/DeleteCameraDocs', methods=['GET'])
@@ -539,6 +542,7 @@ def disable_camera_model():
             stop_processing_for_camera(camera_name)
             status_delete = delete_documents_for_camera(db['RunningNow'], camera_name)
             print(status_delete)
+            update_camera_status_specific_models(camera_name,model_name)            
             if status_delete == True:            
                 apply_Model_Testing(cameraName=camera_name, modelNames=models_updated_list, duration=15)
                 # print(satus_list)
@@ -554,7 +558,6 @@ def disable_camera_model():
                        'Camera Name' : camera_name ,
                        'mess': f'Apply Models {models_updated_list} started in the background for {camera_name} camera',
                        'test' : 'Testing for 15 seconda and All is Good',
-
                             })                    
                     
                 else :
@@ -1222,6 +1225,65 @@ def display_stream() :
 #____________________________________________________________
 
 
+
+
+
+# def watch_changes():
+#     try:
+#         with db.watch(full_document='updateLookup') as change_stream:
+#             for change in change_stream:
+#                 try:
+#                     if change['operationType'] == 'insert':
+#                         RunningNowDic = {
+#                             "Camera Name": change['fullDocument'].get('Camera Info', {}).get('Camera Name'),
+#                             "Model Name": change['fullDocument'].get('Model Name')
+#                         }
+#                         if RunningNowDic["Camera Name"] and RunningNowDic["Model Name"]:
+#                             # Define the query to check for existing document
+#                             query = {
+#                                 "Camera Name": RunningNowDic["Camera Name"],
+#                                 "Model Name": RunningNowDic["Model Name"]
+#                             }
+#                             # Check if the document already exists
+#                             if not check_existing_document(db['RunningNow'], query):
+#                                 # Save the camera info
+#                                 streams_inseration(RunningNowDic)
+
+#                 except Exception as e:
+#                     print(f"Error processing change: {e}")
+#                     continue
+#     finally:
+#         # Drop the collection after processing is complete
+#         collection = db['RunningNow']
+#         collection.drop()
+        
+
+# Global variable to track the last insertion timestamp
+last_insertion_time = time.time()
+
+# Lock for synchronizing access to the last_insertion_time variable
+lock = threading.Lock()
+
+#____________________________________________________________
+def update_last_insertion_time():
+    global last_insertion_time
+    with lock:
+        last_insertion_time = time.time()
+
+#____________________________________________________________
+def check_drop_collection():
+    global last_insertion_time
+    current_time = time.time()
+    with lock:
+        if current_time - last_insertion_time > 120:  # 2 minutes in seconds
+            print("No insertions in the last 2 minutes. Dropping RunningNow collection.")
+            # Drop the collection here
+            collection = db['RunningNow']
+            collection.drop()
+        else:
+            # Schedule the next check in 1 minute
+            threading.Timer(60, check_drop_collection).start()
+
 #____________________________________________________________
 def streams_inseration(model_camera_info):
         
@@ -1230,6 +1292,9 @@ def streams_inseration(model_camera_info):
 
 def watch_changes():
     try:
+        # Start the timer for checking drop collection
+        check_drop_collection()
+
         with db.watch(full_document='updateLookup') as change_stream:
             for change in change_stream:
                 try:
@@ -1248,14 +1313,15 @@ def watch_changes():
                             if not check_existing_document(db['RunningNow'], query):
                                 # Save the camera info
                                 streams_inseration(RunningNowDic)
-
+                                # Update the last insertion time
+                                update_last_insertion_time()
                 except Exception as e:
                     print(f"Error processing change: {e}")
                     continue
     finally:
         # Drop the collection after processing is complete
         collection = db['RunningNow']
-        collection.drop()
+        collection.drop()        
         
 
 @app.route('/camera_names'  ,methods=['GET', 'POST'])

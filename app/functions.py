@@ -4,6 +4,8 @@ import cv2
 from threading import Thread
 from projectModel import *  
 from MongoPackageV2 import *
+from MongoPackageV2 import update_camera_status_models_collection
+
 import time  
 import warnings
 warnings.filterwarnings("ignore")
@@ -362,8 +364,9 @@ def videoFeedMulti(cameraName, modelNames):
                 query = {'Camera Name': cameraName}
                 camera_collection = db['CameraInfo']
                 if check_existing_document(camera_collection, query):
-                    update_existing_document(camera_collection, query, {'Status': 'OFF'})       
+                    update_existing_document(camera_collection, query, {'Status': 'OFF'}) 
                     print('Status is OFF')     
+                    update_camera_status_models_collection(cameraName = cameraName)                       
                 break
 
             count += 1  
