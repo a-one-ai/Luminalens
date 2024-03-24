@@ -176,6 +176,10 @@ def process_frame(frame, modelName, cameraName):
         elif modelName == 'gender':
             path, res = detect_GENDER(frame, cameraName)
             return path, res
+        
+        elif modelName == 'Age':
+            path, res = Age_detection(frame, cameraName)
+            return path, res
     except Exception as e:
         print(f"Error occurred while processing frame with model '{modelName}': {e}")
         return None, None
@@ -290,6 +294,10 @@ def run_models(model_names, frame, camera_name):
                 
             elif model_name == 'Enter Exit Counting':
                 path, res = enterExitCounting(frame, camera_name)
+                results.append((path, res, camera_name, model_name))
+
+            elif model_name == 'Age':
+                path, res = Age_detection(frame, camera_name)
                 results.append((path, res, camera_name, model_name))
 
     except Exception as e:

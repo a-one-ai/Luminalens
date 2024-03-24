@@ -32,7 +32,7 @@ modelDEns = None
 modelG = None
 modelClothes = None
 modelFaces = None
-
+modelAgedetection = None
 
 #____________________________________________________________
 # Lock for thread safety
@@ -52,7 +52,7 @@ def initialize_models():
     global count
     count += 1
     print("Initializing models for the {} time".format(count))
-    global modelCrowd, model, modelV, modelDEns, modelG , modelClothes, modelFaces
+    global modelCrowd, model, modelV, modelDEns, modelG , modelClothes, modelFaces, modelAgedetection
     with model_lock:
         if modelCrowd is None:
             modelCrowd = YOLO('app/modelsReq/yoloModels/best_crowded.pt')
@@ -74,6 +74,9 @@ def initialize_models():
 
         if modelClothes is None:
             modelClothes = YOLO('app/modelsReq/yoloModels/best.pt')
+
+        if modelAgedetection is None:
+            modelAgedetection = YOLO('app/modelsReq/yoloModels/yolo_age_detection.pt')
 
 
 
@@ -611,7 +614,66 @@ def human_clothing(frame, cameraname):
     pprint.pprint(person_info_list)
     return  path, person_info_list
 
+#_______________________________________________________________
+#yolo_age_detection
+# global x_age
+x_age = 0
+def Age_detection(frame,cameraname):
+    global x_age
+    # x_age = 0
+    results = model.predict(frame)
+    a = results[0].boxes.data
+    px = pd.DataFrame(a).astype("float")
 
+    person_bboxes = []
+
+    for index, row in px.iterrows():
+        x1, y1, x2, y2, _, class_id = map(int, row[:6])
+
+        if class_id == class_list.index('person'):
+            person_bboxes.append([x1, y1, x2, y2])
+
+            tracked_objects = tracker.update(person_bboxes)
+
+            for obj_bb_id in tracked_objects:
+                x1, y1, x2, y2, obj_id = obj_bb_id
+
+                face_img = frame[y1:y2, x1:x2].copy()
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+                if face_img.shape[0] > 0 and face_img.shape[1] > 0:
+                    age_results = modelAgedetection.predict(face_img)
+                    
+                    names = modelAgedetection.names
+
+                    for r in age_results:
+                        for c in r.boxes.cls:
+                            x_age = x_age + 1
+                            if names[int(c)] =="0-5" or names[int(c)] =="6-10"or names[int(c)] == "11-15":
+                                age = "young"
+                                print("young")
+                                # Display the age prediction on the frame
+                                cv2.putText(frame, "young", (x1 + 50, y1 + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+                                dirr = f'app/output/Age/{cameraname}'
+                                path = os.path.join(dirr, f'figure{x_age}.jpg')
+                                directory_path = os.path.dirname(path) 
+                                directory_path = create_directory_if_not_exists(directory_path)
+                                
+                                cv2.imwrite(path, frame)
+                            else:
+                                age = "old"
+                                print("old")
+                                 # Display the age prediction on the frame
+                                cv2.putText(frame, "old", (x1 + 50, y1 + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+                                dirr = f'app/output/Age/{cameraname}'
+                                path = os.path.join(dirr, f'figure{x_age}.jpg')
+                                directory_path = os.path.dirname(path) 
+                                directory_path = create_directory_if_not_exists(directory_path)
+                       
+                                cv2.imwrite(path, frame)
+    cv2.imshow('People and Age Detection', frame)
+
+    return path,age
 # cap = cv2.VideoCapture('app/1.mp4')
 
 # while True:

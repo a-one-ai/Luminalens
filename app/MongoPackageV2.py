@@ -208,6 +208,8 @@ def insert_model_info(CameraName, ModelName, Label, FramePath):
         existing_collection = db['ModelGenderData']
     elif ModelName == 'clothes color':
         existing_collection = db['ModelClothesColorData']
+    elif ModelName == 'Age':
+        existing_collection = db['ModelAgeData']    
     elif ModelName == 'enter exit counting':
         existing_collection = db['ModelEnterEXitCountingCollection']
 
@@ -297,8 +299,8 @@ def date_filter_aggerigates_df(CameraName, ModelName, day, month, year):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'Gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
-        
+        'clothes color': 'ModelClothesColorData',
+        'Age': 'ModelAgeData'
     }
 
 
@@ -511,6 +513,8 @@ def average_camera_count(CameraName, ModelName):
         existing_collection = db['ModelCrowdedData']
     elif ModelName == 'Gender':
         existing_collection = db['ModelGenderData']
+    elif ModelName == 'Age':
+        existing_collection = db['ModelAgeData']    
 
     query = {'Camera Info.Camera Name': CameraName}
 
@@ -1208,7 +1212,8 @@ def all_cameras_in_model(ModelName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
+        'clothes color': 'ModelClothesColorData',
+        'Age' : 'ModelAgeData'
 
           }
 
@@ -1236,7 +1241,8 @@ def all_models_in_camera(CameraName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
+        'clothes color': 'ModelClothesColorData',
+        'Age' : 'ModelAgeData'
 }
     
     models_list = []
@@ -1269,7 +1275,8 @@ def all_camera_info(CameraName) :
             'crossingBorder': 'ModelCountingData',
             'crowded': 'ModelCrowdedData',
             'gender': 'ModelGenderData',
-            'clothes color': 'ModelClothesColorData'
+            'clothes color': 'ModelClothesColorData',
+            'Age':'ModelAgeData'
  }
         
         models_list = []
@@ -2259,7 +2266,8 @@ def all_cameras_info() :
                 'crossingBorder': 'ModelCountingData',
                 'crowded': 'ModelCrowdedData',
                 'gender': 'ModelGenderData',
-                'clothes color': 'ModelClothesColorData'
+                'clothes color': 'ModelClothesColorData',
+                'Age': 'ModelAgeData'
     }
             
             models_list = []
@@ -3572,6 +3580,24 @@ def all_cameras_in_violence():
     camera_names =distinct_camera_names
     return camera_names
 
+def all_cameras_in_Age():
+    # Specify the collection names directly
+    collection_name = 'ModelAgeData'
+    
+
+    
+    # Check if the collection exists
+    if collection_name not in db.list_collection_names():
+        camera_names = distinct_camera_names
+        return camera_names
+
+    existing_collection = db[collection_name]
+    
+    distinct_camera_names = existing_collection.distinct('Camera Info.Camera Name')
+
+    camera_names =distinct_camera_names
+    return camera_names
+
 def all_running_now_data():
     existing_collection = db['RunningNow']
     result = existing_collection.find()
@@ -3610,7 +3636,9 @@ def update_camera_status_models_collection(CameraName):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
+        'clothes color': 'ModelClothesColorData',
+        'Age' :'ModelAgeData'
+        
     }
     new_status = 'OFF'
     for model_name, collection_name in collection_mapping.items():
@@ -3633,7 +3661,8 @@ def update_camera_status_specific_models(CameraName, models):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
+        'clothes color': 'ModelClothesColorData',
+        'Age': 'ModelAgeData'
     }
     new_status = 'OFF'
     for model_name in models:
@@ -3647,3 +3676,256 @@ def update_camera_status_specific_models(CameraName, models):
                 print(f"Updated status for collection '{model_name}' documents containing camera '{CameraName}' to '{new_status}'.")
         else:
             print(f"Model '{model_name}' not found in the collection mapping.")
+
+###################################################
+def AgeFilteringH(CameraName, day, month, year):
+    existing_collection = db['ModelAgeData']
+
+    # Ensure month and day are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    # Construct target date string
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+
+    # Check if documents exist for the given query
+    if check_existing_document(existing_collection,query) :
+        print(f'{CameraName} Camera Found in Age Collection')
+        
+        # Define the aggregation pipeline with dynamic date filtering
+        pipeline = [
+            {
+                "$match": query
+            },
+            {
+                "$addFields": {
+                    "HourOfDay": {"$hour": "$Timestamp"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$HourOfDay",
+                    "documents": {"$push": "$$ROOT"}
+                }
+            },
+            {
+                "$addFields": {
+                    "hours": "$_id",
+                    "_id": "$$REMOVE"  # Remove the original _id field
+                }
+            },
+                {
+                "$sort": {"hours": 1}  # Sort by the "hours" field in ascending order
+            }            
+        ]
+
+        # Execute the aggregation pipeline
+        result = list(existing_collection.aggregate(pipeline))
+        
+        # Prepare data for DataFrame
+        data = []
+        print(f'Documents found for {CameraName} on {TargetDate}')
+
+        for item in result:
+            hour = item['hours']
+            am_pm = "PM" if (hour + 2) >= 12 else "AM"
+            formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
+            time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
+
+            if time_range == '12 PM - 13 PM' :
+                        time_range = time_range.replace(time_range,'12 PM - 1 PM')     
+            elif time_range == '11 AM - 12 AM' :
+                        time_range = time_range.replace(time_range,'11 AM - 12 PM')     
+
+                        # Remove _id field from each document
+            cleaned_documents = []
+            for doc in item['documents']:
+                if 'Camera Info' in doc:
+                    doc['Camera Info'].pop('_id', None)
+                doc.pop('_id', None)
+                cleaned_documents.append(doc)
+
+            data.append({'Time Range': time_range, 'Data': cleaned_documents, 'Camera Name': CameraName})          
+            
+        # Create DataFrame
+        df = pd.DataFrame(data)
+        return data    
+    else:
+        print(f'No Documents found for {CameraName} on {TargetDate}')
+
+        dic = {'Time Range': TargetDate, 'Data': [] , 'Camera Name' :CameraName}        
+        # return dic
+        return [dic]
+    
+
+
+
+   
+
+def AgeFilteringM(CameraName, month, year):
+    existing_collection = db['ModelAgeData']
+
+    month = int(month)
+    year = int(year)
+    # Get the number of days in the month
+    num_days = calendar.monthrange(year, month)[1]
+
+    # Prepare data to store results for each day
+    monthly_data = []
+
+    # Iterate over each day in the month
+    for day in range(1, num_days + 1):
+        # Ensure day and month are zero-padded if less than 10
+        day_str = str(day).zfill(2)
+        month_str = str(month).zfill(2)
+
+        # Construct target date string
+        TargetDate = f"{year}-{month_str}-{day_str}"
+
+        query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+
+        # Check if documents exist for the given query
+        if check_existing_document(existing_collection, query):
+            print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
+
+            # Define the aggregation pipeline with dynamic date filtering
+            pipeline = [
+                {
+                    "$match": query
+                },
+                {
+                    "$group": {
+                        "_id": "$Date",
+                        "documents": {"$push": "$$ROOT"}
+                    }
+                }
+            ]
+
+            # Execute the aggregation pipeline
+            result = list(existing_collection.aggregate(pipeline))
+            print(f'Documents found for {CameraName} on {TargetDate}')
+
+            # Prepare data for DataFrame
+            for item in result:
+                # Removing _id from each document
+                cleaned_documents = []
+                for doc in item['documents']:
+                    if 'Camera Info' in doc:
+                        doc['Camera Info'].pop('_id', None)
+                        doc.pop('_id',None)
+                    cleaned_documents.append(doc)
+
+                daily_data = {
+                    'Time Range': item['_id'],
+                    'Data': cleaned_documents,
+                    'Camera Name': CameraName
+                }
+                monthly_data.append(daily_data)
+        else:
+            print(f'No documents found for {CameraName} on {TargetDate}')
+
+    if len(monthly_data) != 0:
+        return monthly_data
+    else:
+        data = {
+            'Time Range': f"{year}-{month_str}",
+            'Camera Name': CameraName,
+            'Data': []        }
+        # return data
+        return [data]
+
+
+
+
+def AgeFilteringY(CameraName, year):
+    existing_collection = db['ModelAgeData']
+
+    year = int(year)
+
+    # Prepare data to store results for each month
+    yearly_data = []
+
+    # Iterate over each month in the year
+    for month in range(1, 13):
+        # Get the number of days in the month
+        num_days = calendar.monthrange(year, month)[1]
+
+        # Prepare data to store results for each day
+        monthly_data = []
+
+        # Get the month name
+        month_name = calendar.month_name[month]
+
+        # Construct target date string
+        TargetDate = f"{month_name} {year}"
+
+        # Iterate over each day in the month
+        for day in range(1, num_days + 1):
+            # Ensure day and month are zero-padded if less than 10
+            day_str = str(day).zfill(2)
+            month_str = str(month).zfill(2)
+
+            # Construct target date string
+            TargetDate = f"{year}-{month_str}-{day_str}"
+
+            query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+
+            # Check if documents exist for the given query
+            if check_existing_document(existing_collection, query):
+                print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
+
+                # Define the aggregation pipeline with dynamic date filtering
+                pipeline = [
+                    {
+                        "$match": query
+                    },
+                    {
+                        "$group": {
+                            "_id": "$Date",
+                            "documents": {"$push": "$$ROOT"}
+                        }
+                    }
+                ]
+
+                # Execute the aggregation pipeline
+                result = list(existing_collection.aggregate(pipeline))
+                print(f'Documents found for {CameraName} on {TargetDate}')
+                
+                    # Prepare data for DataFrame
+                for item in result:
+                    cleaned_documents = []
+                    for doc in item['documents']:
+                            if 'Camera Info' in doc:
+                                doc['Camera Info'].pop('_id', None)
+                                doc.pop('_id', None)
+                            cleaned_documents.append(doc)
+
+                    daily_data = {
+                            'Time Range': month_name,
+                            'Data': cleaned_documents,
+                            'Camera Name': CameraName
+                        }
+                    monthly_data.append(daily_data)                
+
+                
+            else:
+                print(f'No documents found for {CameraName} on {TargetDate}')
+
+        if len(monthly_data) != 0:
+            yearly_data.extend(monthly_data)
+
+    if len(yearly_data) != 0:
+        return yearly_data
+    else:
+        data = {'Time Range': year,
+                'Camera Name': CameraName,
+                'Data': []}
+        # return data
+        return [data]
+    
+    
+# result = VoilenceFilteringY('VoilenceTest', 2024)
+# pprint.pprint(result)
+                

@@ -249,7 +249,7 @@ def get_cameraname():
 @log_route_info_to_db
 # @login_required
 def get_modelname():
-    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender' , 'clothes color' , 'enter exit counting']
+    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender' , 'Age','clothes color' , 'enter exit counting']
     return jsonify(modelname)
 
 # ##--------------------------------------
@@ -1175,6 +1175,42 @@ def violence_Docs():
             docs = VoilenceFilteringY(cameraName, year)
             return jsonify(docs)
 
+@app.route("/age_Docs" , methods = ['POST'])
+@log_route_info_to_db
+def Age_Docs():
+        data = request.form
+        if not data:
+            return jsonify({'mess': "No data provided" }) 
+        print(data)
+        cameraName = data.get('cameraname')
+        day = data.get('day')
+        month = data.get('month')
+        year = data.get('year')
+
+ 
+        docs = None 
+        print(cameraName)
+        print(day)
+        
+        if  cameraName and day and month and year :
+            docs = AgeFilteringH(cameraName, day, month, year)
+            
+            # print(type(docs))
+            # pprint.pprint(docs)
+            return jsonify(docs) 
+
+
+
+        elif cameraName and not day and month and year:
+            docs  = AgeFilteringM(cameraName, month, year)
+            return jsonify(docs)
+
+
+
+        elif cameraName and not day and not month and year:
+            docs = AgeFilteringY(cameraName, year)
+            return jsonify(docs)
+        
 
 @app.route('/filter_all_cameras_in_violence_bydate',methods=['POST']) 
 @log_route_info_to_db
@@ -1199,6 +1235,33 @@ def violence_filter():
 
         elif cameraName and not day and not month and year:
             docs = VoilenceFilteringY(cameraName, year)
+            newdoc.append(docs)
+
+
+
+@app.route('/filterallcamerasAgebydate',methods=['POST']) 
+@log_route_info_to_db
+def age_filter():
+    data = request.form
+    if not data:
+        return jsonify({'mess': "No data provided" }) 
+    print(data)
+    day = data.get('day')
+    month = data.get('month')
+    year = data.get('year')
+    newdoc =[]
+    camera_names = all_cameras_in_Age()
+    print(camera_names)
+    for cameraName in camera_names:
+        if  cameraName and day and month and year :
+            docs = AgeFilteringH(cameraName, day, month, year)
+            newdoc.append(docs)
+        elif cameraName and not day and month and year:
+            docs  = AgeFilteringM(cameraName, month, year)
+            newdoc.append(docs)        
+
+        elif cameraName and not day and not month and year:
+            docs = AgeFilteringY(cameraName, year)
             newdoc.append(docs)
 
     return jsonify(newdoc)
@@ -1322,7 +1385,10 @@ def watch_changes():
         # Drop the collection after processing is complete
         collection = db['RunningNow']
         collection.drop()        
-        
+@app.route('/getage',methods=['POST'])   
+def get_age():
+    return jsonify()
+
 
 @app.route('/camera_names'  ,methods=['GET', 'POST'])
 def get_camera_names():
