@@ -371,11 +371,22 @@ def videoFeedMulti(cameraName, modelNames):
                 print('Stop Processing For This Cam : ',camera_stop_flags.get(cameraName))
                 query = {'Camera Name': cameraName}
                 camera_collection = db['CameraInfo']
-                if check_existing_document(camera_collection, query):
-                    update_existing_document(camera_collection, query, {'Status': 'OFF'}) 
-                    print('Status is OFF')     
-                    update_camera_status_models_collection(cameraName = cameraName)                       
-                break
+                
+                try : 
+                    if not ret :
+                        print('Video is Ended or Cannot Read Source')
+                        break
+                    
+                    else :
+                        if check_existing_document(camera_collection, query):
+                            update_existing_document(camera_collection, query, {'Status': 'OFF'}) 
+                            print('Status is OFF')     
+                            update_camera_status_models_collection(cameraName = cameraName)                       
+                    break
+                
+                except :
+                    print('Unexpected Error')
+                    break                
 
             count += 1  
             if  (count % int(fps) == 0) or (count == 1):     
