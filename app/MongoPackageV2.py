@@ -208,8 +208,6 @@ def insert_model_info(CameraName, ModelName, Label, FramePath):
         existing_collection = db['ModelGenderData']
     elif ModelName == 'clothes color':
         existing_collection = db['ModelClothesColorData']
-    elif ModelName == 'Age':
-        existing_collection = db['ModelAgeData']    
     elif ModelName == 'enter exit counting':
         existing_collection = db['ModelEnterEXitCountingCollection']
 
@@ -299,8 +297,8 @@ def date_filter_aggerigates_df(CameraName, ModelName, day, month, year):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'Gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData',
-        'Age': 'ModelAgeData'
+        'clothes color': 'ModelClothesColorData'
+        
     }
 
 
@@ -513,8 +511,6 @@ def average_camera_count(CameraName, ModelName):
         existing_collection = db['ModelCrowdedData']
     elif ModelName == 'Gender':
         existing_collection = db['ModelGenderData']
-    elif ModelName == 'Age':
-        existing_collection = db['ModelAgeData']    
 
     query = {'Camera Info.Camera Name': CameraName}
 
@@ -783,8 +779,8 @@ def postcam_getallmodelsperH(CameraName, day, month, year):
 
     # Map ModelName to corresponding collection
     model_collection_mapping = {
+        'crossingBorder': 'ModelCountingData',        
         'crowdedDensity': 'ModelDensityData',
-        'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
     }
 
@@ -1199,6 +1195,7 @@ def postcam_getallmodelsperY(CameraName, year):
 
         return final_df                
     
+
 # x = postcam_getallmodelsperY('Ro7Elsharq',2024)
 # print(x)
 
@@ -1212,8 +1209,7 @@ def all_cameras_in_model(ModelName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData',
-        'Age' : 'ModelAgeData'
+        'clothes color': 'ModelClothesColorData'
 
           }
 
@@ -1241,8 +1237,7 @@ def all_models_in_camera(CameraName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData',
-        'Age' : 'ModelAgeData'
+        'clothes color': 'ModelClothesColorData'
 }
     
     models_list = []
@@ -1275,8 +1270,7 @@ def all_camera_info(CameraName) :
             'crossingBorder': 'ModelCountingData',
             'crowded': 'ModelCrowdedData',
             'gender': 'ModelGenderData',
-            'clothes color': 'ModelClothesColorData',
-            'Age':'ModelAgeData'
+            'clothes color': 'ModelClothesColorData'
  }
         
         models_list = []
@@ -2266,8 +2260,7 @@ def all_cameras_info() :
                 'crossingBorder': 'ModelCountingData',
                 'crowded': 'ModelCrowdedData',
                 'gender': 'ModelGenderData',
-                'clothes color': 'ModelClothesColorData',
-                'Age': 'ModelAgeData'
+                'clothes color': 'ModelClothesColorData'
     }
             
             models_list = []
@@ -3580,24 +3573,6 @@ def all_cameras_in_violence():
     camera_names =distinct_camera_names
     return camera_names
 
-def all_cameras_in_Age():
-    # Specify the collection names directly
-    collection_name = 'ModelAgeData'
-    
-
-    
-    # Check if the collection exists
-    if collection_name not in db.list_collection_names():
-        camera_names = distinct_camera_names
-        return camera_names
-
-    existing_collection = db[collection_name]
-    
-    distinct_camera_names = existing_collection.distinct('Camera Info.Camera Name')
-
-    camera_names =distinct_camera_names
-    return camera_names
-
 def all_running_now_data():
     existing_collection = db['RunningNow']
     result = existing_collection.find()
@@ -3636,9 +3611,7 @@ def update_camera_status_models_collection(CameraName):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData',
-        'Age' :'ModelAgeData'
-        
+        'clothes color': 'ModelClothesColorData'
     }
     new_status = 'OFF'
     for model_name, collection_name in collection_mapping.items():
@@ -3661,8 +3634,7 @@ def update_camera_status_specific_models(CameraName, models):
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData',
-        'Age': 'ModelAgeData'
+        'clothes color': 'ModelClothesColorData'
     }
     new_status = 'OFF'
     for model_name in models:
@@ -3677,255 +3649,585 @@ def update_camera_status_specific_models(CameraName, models):
         else:
             print(f"Model '{model_name}' not found in the collection mapping.")
 
-###################################################
-def AgeFilteringH(CameraName, day, month, year):
-    existing_collection = db['ModelAgeData']
 
-    # Ensure month and day are zero-padded if less than 10
+def postcam_getallmodelsperMinutes(CameraName, hour, day, month, year):
+    """
+    Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
+    """
     month_str = str(month).zfill(2)
     day_str = str(day).zfill(2)
 
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'crossingBorder': 'ModelCountingData',
+        'crowdedDensity': 'ModelDensityData',
+        'crowded': 'ModelCrowdedData',
+    }
+
+    hour = int(hour)
+    hour = hour - 2
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
+
+            query = {
+                'Camera Info.Camera Name': CameraName,
+                'Date': TargetDate,
+                '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+            }
+
+            if check_existing_document(existing_collection, query):
+                print(f'{CameraName} Camera Found in {ModelName} Collection')
+                pipeline = [
+                    {"$match": query},
+                    {"$group": {
+                        "_id": {
+                            "minute": {"$minute": "$Timestamp"}
+                        },
+                        "maxCount": {"$max": "$Count"}
+                    }},
+                    {"$project": {
+                        "Minute": "$_id.minute",
+                        "Max Count": "$maxCount",
+                        "_id": 0
+                    }}
+                ]
+
+                result = list(existing_collection.aggregate(pipeline))
+                print(result)
+                if result:
+                    for item in result:
+                        minute = item['Minute']
+                        max_count = item['Max Count']
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': max_count})
+
+                    for minute in range(60):
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': 0})
+
+                    break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate, 'Count Average': 0, 'Model': 'Not Found'}
+            return dictionary
+        else:
+            data.sort(key=lambda x: x['Time Range'])
+            df = pd.DataFrame(data)
+            df = df.sort_values(by=['Time Range', 'Count Average'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+            dictionary = df.to_dict(orient='records')
+            return dictionary
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': 'Null', 'Count Average': 0, 'Model': 'Not Found'}
+        return dictionary
+
+
+
+# pprint.pprint(postcam_getallmodelsperMinutes('MinutesTesting',11,25,3,2024))
+
+
+def get_all_cameras_count_perMinutes(hour, day, month, year):
+    """
+    Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'crossingBorder': 'ModelCountingData',
+        'crowdedDensity': 'ModelDensityData',
+        'crowded': 'ModelCrowdedData',
+    }
+
+    hour = int(hour)
+    hour = hour - 2
+    all_data = []
+    camera_names = finding_camera_names()
+    # camera_names = ['aslom', 'MinutesTesting']    
+    try:
+        for CameraName in camera_names:
+            print('Getting Data of :' , CameraName)
+            data = []  # Initialize data list for each camera        
+            for ModelName, collection_name in model_collection_mapping.items():
+                existing_collection = db[collection_name]
+
+                query = {
+                    'Camera Info.Camera Name': CameraName,
+                    'Date': TargetDate,
+                    '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+                }
+
+                if check_existing_document(existing_collection, query):
+                    print(f'{CameraName} Camera Found in {ModelName} Collection')
+                    pipeline = [
+                        {"$match": query},
+                        {"$group": {
+                            "_id": {
+                                "minute": {"$minute": "$Timestamp"}
+                            },
+                            "maxCount": {"$max": "$Count"}
+                        }},
+                        {"$project": {
+                            "Minute": "$_id.minute",
+                            "Max Count": "$maxCount",
+                            "_id": 0
+                        }}
+                    ]
+
+                    result = list(existing_collection.aggregate(pipeline))
+                    print(result)
+                    if result:
+                        for item in result:
+                            minute = item['Minute']
+                            max_count = item['Max Count']
+                            time_range = f"{hour + 2:02}:{minute:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': max_count})
+
+                        for minute in range(60):
+                            time_range = f"{hour + 2:02}:{minute:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': 0})
+
+                        break
+
+            if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate, 'Count Average': 0, 'Model': 'Not Found'}
+                # return dictionary
+            else:
+                data.sort(key=lambda x: x['Time Range'])
+                df = pd.DataFrame(data)
+                df = df.sort_values(by=['Time Range', 'Count Average'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+                dictionary = df.to_dict(orient='records')                
+                all_data.append(dictionary)
+        return   all_data              
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': 'Null', 'Count Average': 0, 'Model': 'Not Found'}
+        return dictionary
+
+# pprint.pprint(get_all_cameras_count_perMinutes(11,25,3,2024))
+    
+def postcam_getvechileMinutes(CameraName, hour, day, month, year):
+    """
+    Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'vehicle': 'ModelVehicleData',
+    }   
+    hour = int(hour)
+    hour = hour - 2
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
+
+            query = {
+                'Camera Info.Camera Name': CameraName,
+                'Date': TargetDate,
+                '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+            }
+
+            if check_existing_document(existing_collection, query):
+                print(f'{CameraName} Camera Found in {ModelName} Collection')
+                pipeline = [
+                    {"$match": query},
+                    {"$group": {
+                        "_id": {
+                            "minute": {"$minute": "$Timestamp"}
+                        },
+                        "maxCount": {"$max": "$Count"}
+                    }},
+                    {"$project": {
+                        "Minute": "$_id.minute",
+                        "Max Count": "$maxCount",
+                        "_id": 0
+                    }}
+                ]
+
+                result = list(existing_collection.aggregate(pipeline))
+                print(result)
+                if result:
+                    for item in result:
+                        minute = item['Minute']
+                        max_count = item['Max Count']
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': max_count})
+
+                    for minute in range(60):
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': 0})
+
+                    break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate, 'Count Average': 0, 'Model': 'Not Found'}
+            return dictionary
+        else:
+            data.sort(key=lambda x: x['Time Range'])
+            df = pd.DataFrame(data)
+            df = df.sort_values(by=['Time Range', 'Count Average'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+            dictionary = df.to_dict(orient='records')
+            return dictionary
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': 'Null', 'Count Average': 0, 'Model': 'Not Found'}
+        return dictionary    
+    
+
+# pprint.pprint(postcam_getvechileMinutes('MinutesTesting',12,25,3,2024))
+    
+def get_all_vechile_count_perMinutes(hour, day, month, year):
+    """
+    Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+    model_collection_mapping = {
+        'vehicle': 'ModelVehicleData',
+    }   
+    hour = int(hour)
+    hour = hour - 2
+    all_data = []
+    camera_names = finding_camera_names()
+    # camera_names = ['aslom', 'MinutesTesting']    
+    try:
+        for CameraName in camera_names:
+            print('Getting Data of :' , CameraName)
+            data = []  # Initialize data list for each camera        
+            for ModelName, collection_name in model_collection_mapping.items():
+                existing_collection = db[collection_name]
+
+                query = {
+                    'Camera Info.Camera Name': CameraName,
+                    'Date': TargetDate,
+                    '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+                }
+
+                if check_existing_document(existing_collection, query):
+                    print(f'{CameraName} Camera Found in {ModelName} Collection')
+                    pipeline = [
+                        {"$match": query},
+                        {"$group": {
+                            "_id": {
+                                "minute": {"$minute": "$Timestamp"}
+                            },
+                            "maxCount": {"$max": "$Count"}
+                        }},
+                        {"$project": {
+                            "Minute": "$_id.minute",
+                            "Max Count": "$maxCount",
+                            "_id": 0
+                        }}
+                    ]
+
+                    result = list(existing_collection.aggregate(pipeline))
+                    print(result)
+                    if result:
+                        for item in result:
+                            minute = item['Minute']
+                            max_count = item['Max Count']
+                            time_range = f"{hour + 2:02}:{minute:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': max_count})
+
+                        for minute in range(60):
+                            time_range = f"{hour + 2:02}:{minute:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count Average': 0})
+
+                        break
+
+            if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate, 'Count Average': 0, 'Model': 'Not Found'}
+                # return dictionary
+            else:
+                data.sort(key=lambda x: x['Time Range'])
+                df = pd.DataFrame(data)
+                df = df.sort_values(by=['Time Range', 'Count Average'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+                dictionary = df.to_dict(orient='records')                
+                all_data.append(dictionary)
+        return  all_data              
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': 'Null', 'Count Average': 0, 'Model': 'Not Found'}
+        return dictionary
+    
+# pprint.pprint(get_all_vechile_count_perMinutes(12,25,3,2024))
+
+def gender_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
+    """
+    Filter data by date and hour, and get the count for male, female, and total count for each minute within that hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour for which data is to be aggregated.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing minute-wise count for male, female, and total count for the given hour.
+    """
+    # Ensure month, day, and hour are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    hour = int(hour) 
+    hour -=2
     # Construct target date string
     TargetDate = f"{year}-{month_str}-{day_str}"
 
-    query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+    existing_collection = db['ModelGenderData']
 
-    # Check if documents exist for the given query
-    if check_existing_document(existing_collection,query) :
-        print(f'{CameraName} Camera Found in Age Collection')
-        
-        # Define the aggregation pipeline with dynamic date filtering
+    # Query to filter by camera name, date, and hour
+    query = {
+        'Camera Info.Camera Name': CameraName,
+        'Date': TargetDate,
+        '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+    }
+
+    data = []
+    if check_existing_document(existing_collection, query):
+        print(f'{CameraName} Camera Found in Gender Collection')
+
         pipeline = [
-            {
-                "$match": query
-            },
-            {
-                "$addFields": {
-                    "HourOfDay": {"$hour": "$Timestamp"}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$HourOfDay",
-                    "documents": {"$push": "$$ROOT"}
-                }
-            },
-            {
-                "$addFields": {
-                    "hours": "$_id",
-                    "_id": "$$REMOVE"  # Remove the original _id field
-                }
-            },
-                {
-                "$sort": {"hours": 1}  # Sort by the "hours" field in ascending order
-            }            
+            {"$match": query},
+            {"$unwind": "$Label"},
+            {"$group": {
+                "_id": {
+                    "Minute": {"$minute": "$Timestamp"},
+                    "Gender": "$Label.Gender"
+                },
+                "count": {"$sum": 1}
+            }},
+            {"$project": {
+                "Minute": "$_id.Minute",
+                "Gender": "$_id.Gender",
+                "Count": "$count",
+                "_id": 0
+            }},
+            {"$sort": {"Minute": 1}}
         ]
 
-        # Execute the aggregation pipeline
         result = list(existing_collection.aggregate(pipeline))
+        if result:
+            for item in result:
+                minute = item['Minute']
+                time_range = f"{hour+2:02}:{minute:02}"  # Construct time range in HH:MM format
+                gender = item['Gender']
+                count = item['Count']
+
+                data.append({
+                    'Time Range': time_range,
+                    'Gender': gender,
+                    'Count': count,
+                })
+
+            # Create DataFrame from collected data
+            df = pd.DataFrame(data)
+            # Pivot DataFrame to get male and female counts separately
+            df_pivot = df.pivot_table(index='Time Range', columns='Gender', values='Count', aggfunc='sum',
+                                    fill_value=0)
+
+            # Add a total count column
+            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+            # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
+            all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
+            df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
+            df_pivot.columns.name = None
+            df_pivot.reset_index(inplace=True)
+                
+            try :                                        
+                        try :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName   
+                        except : 
+                            df_pivot['Total Count'] = df_pivot['Female'] 
+                            df_pivot['Female'] = 0                        
+                            df_pivot['Camera Name'] = CameraName                   
+            except :
+                            df_pivot['Total Count'] = df_pivot['Male'] 
+                            df_pivot['Female'] = 0                        
+
+                            df_pivot['Camera Name'] = CameraName              
+                        
+
+    if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
+                              'Female' : 0 ,'Male' :0, 'Total Count': 0}
+                return dictionary
+    else :
+            dictionary = df_pivot.to_dict(orient='records')
+            return dictionary
         
-        # Prepare data for DataFrame
-        data = []
-        print(f'Documents found for {CameraName} on {TargetDate}')
 
-        for item in result:
-            hour = item['hours']
-            am_pm = "PM" if (hour + 2) >= 12 else "AM"
-            formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
-            time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
-
-            if time_range == '12 PM - 13 PM' :
-                        time_range = time_range.replace(time_range,'12 PM - 1 PM')     
-            elif time_range == '11 AM - 12 AM' :
-                        time_range = time_range.replace(time_range,'11 AM - 12 PM')     
-
-                        # Remove _id field from each document
-            cleaned_documents = []
-            for doc in item['documents']:
-                if 'Camera Info' in doc:
-                    doc['Camera Info'].pop('_id', None)
-                doc.pop('_id', None)
-                cleaned_documents.append(doc)
-
-            data.append({'Time Range': time_range, 'Data': cleaned_documents, 'Camera Name': CameraName})          
-            
-        # Create DataFrame
-        df = pd.DataFrame(data)
-        return data    
-    else:
-        print(f'No Documents found for {CameraName} on {TargetDate}')
-
-        dic = {'Time Range': TargetDate, 'Data': [] , 'Camera Name' :CameraName}        
-        # return dic
-        return [dic]
-    
+# # Example usage:
+# hour_data = gender_filtering_Minutes_aggregates('GenderTest', 13, 25,3, 2024)
+# pprint.pprint(hour_data)
 
 
+def get_all_cameras_genderPerMinutes(hour, day, month, year):
+    """
+    Filter data by date and hour, and get the count for male, female, and total count for each minute within that hour.
 
-   
+    Args:
+        hour (int): Hour for which data is to be aggregated.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
 
-def AgeFilteringM(CameraName, month, year):
-    existing_collection = db['ModelAgeData']
+    Returns:
+        pandas.DataFrame: DataFrame containing minute-wise count for male, female, and total count for the given hour.
+    """
+    # Ensure month, day, and hour are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    hour = int(hour) 
+    hour -=2
+    # Construct target date string
+    TargetDate = f"{year}-{month_str}-{day_str}"
 
-    month = int(month)
-    year = int(year)
-    # Get the number of days in the month
-    num_days = calendar.monthrange(year, month)[1]
+    existing_collection = db['ModelGenderData']
 
-    # Prepare data to store results for each day
-    monthly_data = []
-
-    # Iterate over each day in the month
-    for day in range(1, num_days + 1):
-        # Ensure day and month are zero-padded if less than 10
-        day_str = str(day).zfill(2)
-        month_str = str(month).zfill(2)
-
-        # Construct target date string
-        TargetDate = f"{year}-{month_str}-{day_str}"
-
-        query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
-
-        # Check if documents exist for the given query
+    camera_names =  all_cameras_in_model('gender')['Camera Names']
+    print(camera_names)
+    # camera_names = ['aslom','GenderTest','FristCam']
+    all_data = []
+    for CameraName in camera_names :
+        print('Getting Data of :' , CameraName)
+        # Query to filter by camera name and date
+        query = {
+            'Camera Info.Camera Name': CameraName,
+            'Date': TargetDate,
+            '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+        }        
+        data = []    
         if check_existing_document(existing_collection, query):
-            print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
+            print(f'{CameraName} Camera Found in Gender Collection')
 
-            # Define the aggregation pipeline with dynamic date filtering
             pipeline = [
-                {
-                    "$match": query
-                },
-                {
-                    "$group": {
-                        "_id": "$Date",
-                        "documents": {"$push": "$$ROOT"}
-                    }
-                }
+                {"$match": query},
+                {"$unwind": "$Label"},
+                {"$group": {
+                    "_id": {
+                        "Minute": {"$minute": "$Timestamp"},
+                        "Gender": "$Label.Gender"
+                    },
+                    "count": {"$sum": 1}
+                }},
+                {"$project": {
+                    "Minute": "$_id.Minute",
+                    "Gender": "$_id.Gender",
+                    "Count": "$count",
+                    "_id": 0
+                }},
+                {"$sort": {"Minute": 1}}
             ]
 
-            # Execute the aggregation pipeline
             result = list(existing_collection.aggregate(pipeline))
-            print(f'Documents found for {CameraName} on {TargetDate}')
-
-            # Prepare data for DataFrame
-            for item in result:
-                # Removing _id from each document
-                cleaned_documents = []
-                for doc in item['documents']:
-                    if 'Camera Info' in doc:
-                        doc['Camera Info'].pop('_id', None)
-                        doc.pop('_id',None)
-                    cleaned_documents.append(doc)
-
-                daily_data = {
-                    'Time Range': item['_id'],
-                    'Data': cleaned_documents,
-                    'Camera Name': CameraName
-                }
-                monthly_data.append(daily_data)
-        else:
-            print(f'No documents found for {CameraName} on {TargetDate}')
-
-    if len(monthly_data) != 0:
-        return monthly_data
-    else:
-        data = {
-            'Time Range': f"{year}-{month_str}",
-            'Camera Name': CameraName,
-            'Data': []        }
-        # return data
-        return [data]
-
-
-
-
-def AgeFilteringY(CameraName, year):
-    existing_collection = db['ModelAgeData']
-
-    year = int(year)
-
-    # Prepare data to store results for each month
-    yearly_data = []
-
-    # Iterate over each month in the year
-    for month in range(1, 13):
-        # Get the number of days in the month
-        num_days = calendar.monthrange(year, month)[1]
-
-        # Prepare data to store results for each day
-        monthly_data = []
-
-        # Get the month name
-        month_name = calendar.month_name[month]
-
-        # Construct target date string
-        TargetDate = f"{month_name} {year}"
-
-        # Iterate over each day in the month
-        for day in range(1, num_days + 1):
-            # Ensure day and month are zero-padded if less than 10
-            day_str = str(day).zfill(2)
-            month_str = str(month).zfill(2)
-
-            # Construct target date string
-            TargetDate = f"{year}-{month_str}-{day_str}"
-
-            query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
-
-            # Check if documents exist for the given query
-            if check_existing_document(existing_collection, query):
-                print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
-
-                # Define the aggregation pipeline with dynamic date filtering
-                pipeline = [
-                    {
-                        "$match": query
-                    },
-                    {
-                        "$group": {
-                            "_id": "$Date",
-                            "documents": {"$push": "$$ROOT"}
-                        }
-                    }
-                ]
-
-                # Execute the aggregation pipeline
-                result = list(existing_collection.aggregate(pipeline))
-                print(f'Documents found for {CameraName} on {TargetDate}')
-                
-                    # Prepare data for DataFrame
+            if result:
                 for item in result:
-                    cleaned_documents = []
-                    for doc in item['documents']:
-                            if 'Camera Info' in doc:
-                                doc['Camera Info'].pop('_id', None)
-                                doc.pop('_id', None)
-                            cleaned_documents.append(doc)
+                    minute = item['Minute']
+                    time_range = f"{hour+2:02}:{minute:02}"  # Construct time range in HH:MM format
+                    gender = item['Gender']
+                    count = item['Count']
 
-                    daily_data = {
-                            'Time Range': month_name,
-                            'Data': cleaned_documents,
-                            'Camera Name': CameraName
-                        }
-                    monthly_data.append(daily_data)                
+                    data.append({
+                        'Time Range': time_range,
+                        'Gender': gender,
+                        'Count': count,
+                    })
 
-                
-            else:
-                print(f'No documents found for {CameraName} on {TargetDate}')
+                # Create DataFrame from collected data
+                df = pd.DataFrame(data)
+                # Pivot DataFrame to get male and female counts separately
+                df_pivot = df.pivot_table(index='Time Range', columns='Gender', values='Count', aggfunc='sum',
+                                        fill_value=0)
 
-        if len(monthly_data) != 0:
-            yearly_data.extend(monthly_data)
+                # Add a total count column
+                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
+                all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
+                df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
+                df_pivot.columns.name = None
+                df_pivot.reset_index(inplace=True)
+                    
+                try :                                        
+                            try :
+                            # Add a total count column
+                                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                                df_pivot['Camera Name'] = CameraName   
+                            except : 
+                                df_pivot['Total Count'] = df_pivot['Female'] 
+                                df_pivot['Female'] = 0                        
+                                df_pivot['Camera Name'] = CameraName                   
+                except :
+                                df_pivot['Total Count'] = df_pivot['Male'] 
+                                df_pivot['Female'] = 0                        
 
-    if len(yearly_data) != 0:
-        return yearly_data
-    else:
-        data = {'Time Range': year,
-                'Camera Name': CameraName,
-                'Data': []}
-        # return data
-        return [data]
-    
-    
-# result = VoilenceFilteringY('VoilenceTest', 2024)
-# pprint.pprint(result)
-                
+                                df_pivot['Camera Name'] = CameraName              
+                            
+
+        if len(data) == 0:
+                    dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
+                                'Female' : 0 ,'Male' :0, 'Total Count': 0}
+                    # return dictionary
+        else :
+                dictionary = df_pivot.to_dict(orient='records')
+                all_data.append(dictionary)
+    return all_data    
+
+# pprint.pprint(get_all_cameras_genderPerMinutes(13,25,3,2024))
