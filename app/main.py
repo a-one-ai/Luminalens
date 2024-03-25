@@ -1227,6 +1227,69 @@ def violence_Docs():
             docs = VoilenceFilteringY(cameraName, year)
             return jsonify(docs)
 
+@app.route("/age_Docs" , methods = ['POST'])
+@log_route_info_to_db
+def Age_Docs():
+        data = request.form
+        if not data:
+            return jsonify({'mess': "No data provided" }) 
+        print(data)
+        cameraName = data.get('cameraname')
+        day = data.get('day')
+        month = data.get('month')
+        year = data.get('year')
+
+ 
+        docs = None 
+        print(cameraName)
+        print(day)
+        
+        if  cameraName and day and month and year :
+            docs = AgeFilteringH(cameraName, day, month, year)
+            
+            # print(type(docs))
+            # pprint.pprint(docs)
+            return jsonify(docs) 
+
+
+
+        elif cameraName and not day and month and year:
+            docs  = AgeFilteringM(cameraName, month, year)
+            return jsonify(docs)
+
+
+
+        elif cameraName and not day and not month and year:
+            docs = AgeFilteringY(cameraName, year)
+            return jsonify(docs)
+        
+@app.route('/filterallcamerasAgebydate',methods=['POST']) 
+@log_route_info_to_db
+def age_filter():
+    data = request.form
+    if not data:
+        return jsonify({'mess': "No data provided" }) 
+    print(data)
+    day = data.get('day')
+    month = data.get('month')
+    year = data.get('year')
+    newdoc =[]
+    camera_names = all_cameras_in_Age()
+    print(camera_names)
+    for cameraName in camera_names:
+        if  cameraName and day and month and year :
+            docs = AgeFilteringH(cameraName, day, month, year)
+            newdoc.append(docs)
+        elif cameraName and not day and month and year:
+            docs  = AgeFilteringM(cameraName, month, year)
+            newdoc.append(docs)        
+
+        elif cameraName and not day and not month and year:
+            docs = AgeFilteringY(cameraName, year)
+            newdoc.append(docs)
+
+    return jsonify(newdoc)
+
 
 @app.route('/filter_all_cameras_in_violence_bydate',methods=['POST']) 
 @log_route_info_to_db
