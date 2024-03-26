@@ -614,79 +614,89 @@ def human_clothing(frame, cameraname):
     pprint.pprint(person_info_list)
     return  path, person_info_list
 
-#_______________________________________________________________
-#yolo_age_detection
-# global x_age
+
+#____________________________________________________________
+#yolo Age_detection
 x_age = 0
-def Age_detection(frame,cameraname):
+def predict_Age(frame):
+    try:
+        results = modelAgedetection(frame, stream=True)
+        label_list = []
+        for info in results:
+            boxes = info.boxes
+            for box in boxes:
+                confidence = math.ceil(box.conf[0] * 100)
+                if confidence >= 25:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    label = modelAgedetection.names[int(box.cls[0])]
+                    dic = {'Age': label, 'Confidence': confidence}
+                    label_list.append(dic)
+        return label_list
+    except Exception as e:
+        print(f'>> Error in Age detection: {str(e)}')
+        return []
+
+#____________________________________________________________
+def Age_detection (frame, cameraname):
     global x_age
-    # x_age = 0
-    results = model.predict(frame)
-    a = results[0].boxes.data
-    px = pd.DataFrame(a).astype("float")
+    age_info = []
+    path = ''
+    try:
+        # Assign image to model
+        face_result = modelFaces.predict(frame)
+        for info in face_result:
+            parameters = info.boxes
+            for box in parameters:
+                confidence = math.ceil(box.conf[0] * 100)
+                if confidence >= 40:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    x1, y1, x2, y2 = x1-10, y1-20, x2+10, y2+10
 
-    person_bboxes = []
+                    # Call Age detection function
+                    label_list = predict_Age(frame[y1:y2, x1:x2])
 
-    for index, row in px.iterrows():
-        x1, y1, x2, y2, _, class_id = map(int, row[:6])
+                    # Add Age info to the list
+                    if label_list:
+                        # if names[int(c)] =="0-5" or names[int(c)] =="6-10"or names[int(c)] == "11-15":
+                        if label_list[0]['Age'] <= "11-15":   
+                            age_info.append({'Person ID': len(age_info) + 1,
+                                            'Age': "Young",
+                                            'Confidence': label_list[0]['Confidence'],
+                                            'Location': (x1, y1, x2, y2)})
+                        else:
+                            age_info.append({'Person ID': len(age_info) + 1,
+                                            'Age': "Old",
+                                            'Confidence': label_list[0]['Confidence'],
+                                            'Location': (x1, y1, x2, y2)})
 
-        if class_id == class_list.index('person'):
-            person_bboxes.append([x1, y1, x2, y2])
 
-            tracked_objects = tracker.update(person_bboxes)
+        # Draw rectangles and text on the frame
+        for info in age_info:
+            # Draw rectangle over the face
+            cv2.rectangle(frame, (info['Location'][0], info['Location'][1]), 
+                          (info['Location'][2], info['Location'][3]), (255, 100, 0), 4)
+          
+            # Display gender label and confidence inside the rectangle
+            age_text = f"{info['Age']} "
+            cv2.putText(frame, age_text, (info['Location'][0], info['Location'][1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 120, 255), 2)
+            del info['Confidence']
+        
+            del info['Location']
+        cv2.imshow('Image' , frame)
+            
+        if len(age_info) != 0 :
+            # Save the frame with drawn rectangles and text
+            dirr = f'app/output/Age/{cameraname}'
+            path = os.path.join(dirr, f'frame_{x_age}.jpg')
+            directory_path = os.path.dirname(path)
+            directory_path = create_directory_if_not_exists(directory_path)
+            cv2.imwrite(path, frame)
+            x_age += 1
+        
+        print(path,age_info)           
+        return path, age_info
 
-            for obj_bb_id in tracked_objects:
-                x1, y1, x2, y2, obj_id = obj_bb_id
-
-                face_img = frame[y1:y2, x1:x2].copy()
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-
-                if face_img.shape[0] > 0 and face_img.shape[1] > 0:
-                    age_results = modelAgedetection.predict(face_img)
-                    
-                    names = modelAgedetection.names
-
-                    for r in age_results:
-                        for c in r.boxes.cls:
-                            x_age = x_age + 1
-                            if names[int(c)] =="0-5" or names[int(c)] =="6-10"or names[int(c)] == "11-15":
-                                age = "young"
-                                print("young")
-                                # Display the age prediction on the frame
-                                cv2.putText(frame, "young", (x1 + 50, y1 + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-                                dirr = f'app/output/Age/{cameraname}'
-                                path = os.path.join(dirr, f'figure{x_age}.jpg')
-                                directory_path = os.path.dirname(path) 
-                                directory_path = create_directory_if_not_exists(directory_path)
-                                
-                                cv2.imwrite(path, frame)
-                            else:
-                                age = "old"
-                                print("old")
-                                 # Display the age prediction on the frame
-                                cv2.putText(frame, "old", (x1 + 50, y1 + 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-                                dirr = f'app/output/Age/{cameraname}'
-                                path = os.path.join(dirr, f'figure{x_age}.jpg')
-                                directory_path = os.path.dirname(path) 
-                                directory_path = create_directory_if_not_exists(directory_path)
-                       
-                                cv2.imwrite(path, frame)
-    cv2.imshow('People and Age Detection', frame)
-
-    return path,age
-# cap = cv2.VideoCapture('app/1.mp4')
-
-# while True:
-#     ret, frame = cap.read()
-
-#     if not ret:
-#         break
-#     path , res = violence(frame,'as')    
-#     print(path,res)
-#     # Check for 'q' key to exit the loop
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-
-# # Release the camera and close all OpenCV windows
-# cap.release()
-# cv2.destroyAllWindows()
+    except Exception as e:
+        print("Error in face detection:", e)
+        return path, []
