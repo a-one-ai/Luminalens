@@ -1250,7 +1250,66 @@ def genderCount_Docs():
                 return jsonify(docs)
 
 #____________________________________________________________
+@app.route("/AgeCount_Docs" , methods = ['POST'])
+@log_route_info_to_db
+# @login_required
+def AgeCount_Docs():
+        data = request.form
+        if not data:
+            return jsonify({'mess': "No data provided" }) 
+        
+        cameraName = data.get('cameraname')
+        day = data.get('day')
+        month = data.get('month')
+        year = data.get('year')
+        hour = data.get('hour')
+        minute = data.get('minute')
+ 
+        docs = None 
 
+        if  cameraName and minute and hour and day and month and year :
+            docs = Age_filtering_Seconds_aggregates(cameraName,minute,hour, day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)
+            
+        if  cameraName and  not minute and hour and day and month and year :
+            docs = Age_filtering_Minutes_aggregates(cameraName,hour, day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)            
+
+        elif  cameraName and not hour and day and month and year :
+            docs = Age_filtering_date_aggrigates(cameraName, day, month, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+
+        elif cameraName and not day and month and year:
+            docs  = Age_filtering_month_aggregates(cameraName, month, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+
+        elif cameraName and not day and not month and year:
+            docs = Age_filtering_year_aggregates(cameraName, year)
+            try :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs) 
+            except :
+                return jsonify(docs)
+
+#____________________________________________________________
 
 @app.route("/violence_Docs" , methods = ['POST'])
 @log_route_info_to_db
