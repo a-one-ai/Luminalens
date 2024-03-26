@@ -824,13 +824,23 @@ def allmodelsstatistics():
         month = data.get('month')
         year = data.get('year')
         hour = data.get('hour')
-
+        minute = data.get('minute')        
         dictionary = None 
 
 
-
+               
+        if  cameraName and minute and hour and day and month and year :
+            dictionary = postcam_getallmodelsperSecond(cameraName,minute,hour ,day, month, year)
+            # print(dictionary)
+            try :
+                return jsonify(dictionary) 
+            except :
+                dictionary = dictionary.to_dict(orient='records')
+                return jsonify(dictionary)
+            # print(dictionary)
+ 
        
-        if  cameraName and hour and day and month and year :
+        elif  cameraName and not minute and hour and day and month and year :
             dictionary = postcam_getallmodelsperMinutes(cameraName, hour ,day, month, year)
             # print(dictionary)
             try :
@@ -883,18 +893,28 @@ def people_count_time_range():
         month = data.get('month')
         year = data.get('year')
         hour = data.get('hour')
-
+        minute = data.get('minute')        
         data = None 
 
 
-        if hour and day and month and year :
-            data = get_all_cameras_count_perMinutes(hour,day, month, year)
+        if minute and hour and day and month and year :
+            data = get_all_cameras_count_perSecond(minute,hour,day, month, year)
             # print(dictionary)
             try :
                 return jsonify(data) 
             except :
                 return jsonify(data)
             # print(dictionary)
+
+        
+        elif not minute and hour and day and month and year :
+            data = get_all_cameras_count_perMinutes(hour,day, month, year)
+            # print(dictionary)
+            try :
+                return jsonify(data) 
+            except :
+                return jsonify(data)
+            # print(dictionary)            
 
         elif  not hour and day and month and year :
             data = get_all_cameras_count_perH(day, month, year)
@@ -938,10 +958,20 @@ def gender_count_time_range():
         month = data.get('month')
         year = data.get('year')
         hour = data.get('hour')
-
+        minute = data.get('minute')
+    
         data = None 
 
-        if  hour and day and month and year :
+        if  minute and hour and day and month and year :
+            data = get_all_cameras_genderPerSeconds(minute,hour,day, month, year)
+            # print(dictionary)
+            try :
+                return jsonify(data) 
+            except :
+                return jsonify(data)
+            # print(dictionary)
+
+        elif not minute and hour and day and month and year :
             data = get_all_cameras_genderPerMinutes(hour,day, month, year)
             # print(dictionary)
             try :
@@ -992,12 +1022,12 @@ def vechile_count_time_range():
         day = data.get('day')
         month = data.get('month')
         year = data.get('year')
-
         hour  =  data.get('hour')
+        minute = data.get('minute')        
         data = None 
 
-        if  hour and day and month and year :
-            data = get_all_vechile_count_perMinutes(hour,day, month, year)
+        if  minute and hour and day and month and year :
+            data = get_all_vechile_count_perSecond(minute,hour,day, month, year)
             # print(dictionary)
             try :
                 return jsonify(data) 
@@ -1005,6 +1035,14 @@ def vechile_count_time_range():
                 return jsonify(data)
             # print(dictionary)
 
+        elif  hour and day and month and year :
+            data = get_all_vechile_count_perMinutes(hour,day, month, year)
+            # print(dictionary)
+            try :
+                return jsonify(data) 
+            except :
+                return jsonify(data)
+            # print(dictionary)
 
         elif not hour and day and month and year :
             data = get_all_vechile_count_perH(day, month, year)
@@ -1048,11 +1086,12 @@ def allmodelsstatisticsvehicle():
         month = data.get('month')
         year = data.get('year')
         hour = data.get('hour')
+        minute = data.get('minute')        
 
         dictionary = None 
 
-        if  cameraName and hour and day and month and year :
-            dictionary = postcam_getvechileMinutes(cameraName, hour,day, month, year)
+        if  cameraName and minute and hour and day and month and year :
+            dictionary = postcam_getvechileSeconds(cameraName, minute,hour,day, month, year)
             # print(dictionary)
             try :
                 return jsonify(dictionary) 
@@ -1061,6 +1100,17 @@ def allmodelsstatisticsvehicle():
 
                 return jsonify(dictionary)
             # print(dictionary)
+
+        elif  cameraName and not minute and hour and day and month and year :
+            dictionary = postcam_getvechileMinutes(cameraName, hour,day, month, year)
+            # print(dictionary)
+            try :
+                return jsonify(dictionary) 
+            except :
+                dictionary = dictionary.to_dict(orient='records')
+
+                return jsonify(dictionary)
+            # print(dictionary)            
 
         elif  cameraName and not hour and day and month and year :
             dictionary = postcam_getvechileH(cameraName, day, month, year)
@@ -1151,17 +1201,27 @@ def genderCount_Docs():
         month = data.get('month')
         year = data.get('year')
         hour = data.get('hour')
+        minute = data.get('minute')
+
         Male = None 
         Female = None 
         docs = None 
 
-        if  cameraName and hour and day and month and year :
-            docs = gender_filtering_Minutes_aggregates(cameraName,hour, day, month, year)
+        if  cameraName and minute and hour and day and month and year :
+            docs = gender_filtering_Seconds_aggregates(cameraName,minute,hour, day, month, year)
             try :
                 return jsonify(docs) 
             except :
                 docs = docs.to_dict(orient='records')
                 return jsonify(docs)
+            
+        if  cameraName and  not minute and hour and day and month and year :
+            docs = gender_filtering_Minutes_aggregates(cameraName,hour, day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)            
 
         elif  cameraName and not hour and day and month and year :
             docs = gender_filtering_date_aggrigates(cameraName, day, month, year)
@@ -1226,69 +1286,6 @@ def violence_Docs():
         elif cameraName and not day and not month and year:
             docs = VoilenceFilteringY(cameraName, year)
             return jsonify(docs)
-
-@app.route("/age_Docs" , methods = ['POST'])
-@log_route_info_to_db
-def Age_Docs():
-        data = request.form
-        if not data:
-            return jsonify({'mess': "No data provided" }) 
-        print(data)
-        cameraName = data.get('cameraname')
-        day = data.get('day')
-        month = data.get('month')
-        year = data.get('year')
-
- 
-        docs = None 
-        print(cameraName)
-        print(day)
-        
-        if  cameraName and day and month and year :
-            docs = AgeFilteringH(cameraName, day, month, year)
-            
-            # print(type(docs))
-            # pprint.pprint(docs)
-            return jsonify(docs) 
-
-
-
-        elif cameraName and not day and month and year:
-            docs  = AgeFilteringM(cameraName, month, year)
-            return jsonify(docs)
-
-
-
-        elif cameraName and not day and not month and year:
-            docs = AgeFilteringY(cameraName, year)
-            return jsonify(docs)
-        
-@app.route('/filterallcamerasAgebydate',methods=['POST']) 
-@log_route_info_to_db
-def age_filter():
-    data = request.form
-    if not data:
-        return jsonify({'mess': "No data provided" }) 
-    print(data)
-    day = data.get('day')
-    month = data.get('month')
-    year = data.get('year')
-    newdoc =[]
-    camera_names = all_cameras_in_Age()
-    print(camera_names)
-    for cameraName in camera_names:
-        if  cameraName and day and month and year :
-            docs = AgeFilteringH(cameraName, day, month, year)
-            newdoc.append(docs)
-        elif cameraName and not day and month and year:
-            docs  = AgeFilteringM(cameraName, month, year)
-            newdoc.append(docs)        
-
-        elif cameraName and not day and not month and year:
-            docs = AgeFilteringY(cameraName, year)
-            newdoc.append(docs)
-
-    return jsonify(newdoc)
 
 
 @app.route('/filter_all_cameras_in_violence_bydate',methods=['POST']) 

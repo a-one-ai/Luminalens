@@ -206,8 +206,6 @@ def insert_model_info(CameraName, ModelName, Label, FramePath):
         existing_collection = db['ModelCrowdedData']
     elif ModelName == 'gender':
         existing_collection = db['ModelGenderData']
-    elif ModelName == 'Age':
-        existing_collection = db['ModelAgeData']
     elif ModelName == 'clothes color':
         existing_collection = db['ModelClothesColorData']
     elif ModelName == 'enter exit counting':
@@ -3708,7 +3706,7 @@ def postcam_getallmodelsperMinutes(CameraName, hour, day, month, year):
                 ]
 
                 result = list(existing_collection.aggregate(pipeline))
-                print(result)
+                # print(result)
                 if result:
                     for item in result:
                         minute = item['Minute']
@@ -4084,7 +4082,7 @@ def gender_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
                                     fill_value=0)
 
             # Add a total count column
-            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+            # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
             # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
             all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
             df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
@@ -4200,7 +4198,7 @@ def get_all_cameras_genderPerMinutes(hour, day, month, year):
                                         fill_value=0)
 
                 # Add a total count column
-                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
                 # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
                 all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
                 df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
@@ -4232,383 +4230,603 @@ def get_all_cameras_genderPerMinutes(hour, day, month, year):
                 all_data.append(dictionary)
     return all_data    
 
-# pprint.pprint(get_all_cameras_genderPerMinutes(17,25,3,2024))
+# pprint.pprint(get_all_cameras_genderPerMinutes(13,25,3,2024))
 
-def AgeFilteringH(CameraName, day, month, year):
-    existing_collection = db['ModelAgeData']
 
-    # Ensure month and day are zero-padded if less than 10
+# camera_names =  all_cameras_in_model('gender')['Camera Names']
+# print(camera_names)
+
+
+def postcam_getallmodelsperSecond(CameraName, minute, hour, day, month, year):
+    """
+    Filter data by date and hour and get all count data for all models applied to a specific camera, grouped by seconds within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
+    """
     month_str = str(month).zfill(2)
     day_str = str(day).zfill(2)
 
-    # Construct target date string
     TargetDate = f"{year}-{month_str}-{day_str}"
 
-    query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+    model_collection_mapping = {
+        'crossingBorder': 'ModelCountingData',
+        'crowdedDensity': 'ModelDensityData',
+        'crowded': 'ModelCrowdedData',
+    }
 
-    # Check if documents exist for the given query
-    if check_existing_document(existing_collection,query) :
-        print(f'{CameraName} Camera Found in Age Collection')
-        
-        # Define the aggregation pipeline with dynamic date filtering
-        pipeline = [
-            {
-                "$match": query
-            },
-            {
-                "$addFields": {
-                    "HourOfDay": {"$hour": "$Timestamp"}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$HourOfDay",
-                    "documents": {"$push": "$$ROOT"}
-                }
-            },
-            {
-                "$addFields": {
-                    "hours": "$_id",
-                    "_id": "$$REMOVE"  # Remove the original _id field
-                }
-            },
-                {
-                "$sort": {"hours": 1}  # Sort by the "hours" field in ascending order
-            }            
-        ]
-
-        # Execute the aggregation pipeline
-        result = list(existing_collection.aggregate(pipeline))
-        
-        # Prepare data for DataFrame
-        data = []
-        print(f'Documents found for {CameraName} on {TargetDate}')
-
-        for item in result:
-            hour = item['hours']
-            am_pm = "PM" if (hour + 2) >= 12 else "AM"
-            formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
-            time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
-
-            if time_range == '12 PM - 13 PM' :
-                        time_range = time_range.replace(time_range,'12 PM - 1 PM')     
-            elif time_range == '11 AM - 12 AM' :
-                        time_range = time_range.replace(time_range,'11 AM - 12 PM')     
-
-                        # Remove _id field from each document
-            cleaned_documents = []
-            for doc in item['documents']:
-                if 'Camera Info' in doc:
-                    doc['Camera Info'].pop('_id', None)
-                doc.pop('_id', None)
-                cleaned_documents.append(doc)
-
-            data.append({'Time Range': time_range, 'Data': cleaned_documents, 'Camera Name': CameraName})          
-            
-        # Create DataFrame
-        df = pd.DataFrame(data)
-        return data    
-    else:
-        print(f'No Documents found for {CameraName} on {TargetDate}')
-
-        dic = {'Time Range': TargetDate, 'Data': [] , 'Camera Name' :CameraName}        
-        # return dic
-        return [dic]
+    hour = int(hour)
+    hour = hour - 2
     
+    minute = int(minute)
 
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
 
+            query = {
+                'Camera Info.Camera Name': CameraName,
+                'Date': TargetDate,
+                '$expr': {'$and': [
+                    {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                    {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                    {'$gte': [{'$second': '$Timestamp'}, 0]},
+                    {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+                ]}
+            }
 
-   
-
-def AgeFilteringM(CameraName, month, year):
-    existing_collection = db['ModelAgeData']
-
-    month = int(month)
-    year = int(year)
-    # Get the number of days in the month
-    num_days = calendar.monthrange(year, month)[1]
-
-    # Prepare data to store results for each day
-    monthly_data = []
-
-    # Iterate over each day in the month
-    for day in range(1, num_days + 1):
-        # Ensure day and month are zero-padded if less than 10
-        day_str = str(day).zfill(2)
-        month_str = str(month).zfill(2)
-
-        # Construct target date string
-        TargetDate = f"{year}-{month_str}-{day_str}"
-
-        query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
-
-        # Check if documents exist for the given query
-        if check_existing_document(existing_collection, query):
-            print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
-
-            # Define the aggregation pipeline with dynamic date filtering
-            pipeline = [
-                {
-                    "$match": query
-                },
-                {
-                    "$group": {
-                        "_id": "$Date",
-                        "documents": {"$push": "$$ROOT"}
-                    }
-                }
-            ]
-
-            # Execute the aggregation pipeline
-            result = list(existing_collection.aggregate(pipeline))
-            print(f'Documents found for {CameraName} on {TargetDate}')
-
-            # Prepare data for DataFrame
-            for item in result:
-                # Removing _id from each document
-                cleaned_documents = []
-                for doc in item['documents']:
-                    if 'Camera Info' in doc:
-                        doc['Camera Info'].pop('_id', None)
-                        doc.pop('_id',None)
-                    cleaned_documents.append(doc)
-
-                daily_data = {
-                    'Time Range': item['_id'],
-                    'Data': cleaned_documents,
-                    'Camera Name': CameraName
-                }
-                monthly_data.append(daily_data)
-        else:
-            print(f'No documents found for {CameraName} on {TargetDate}')
-
-    if len(monthly_data) != 0:
-        return monthly_data
-    else:
-        data = {
-            'Time Range': f"{year}-{month_str}",
-            'Camera Name': CameraName,
-            'Data': []        }
-        # return data
-        return [data]
-
-
-
-
-def AgeFilteringY(CameraName, year):
-    existing_collection = db['ModelAgeData']
-
-    year = int(year)
-
-    # Prepare data to store results for each month
-    yearly_data = []
-
-    # Iterate over each month in the year
-    for month in range(1, 13):
-        # Get the number of days in the month
-        num_days = calendar.monthrange(year, month)[1]
-
-        # Prepare data to store results for each day
-        monthly_data = []
-
-        # Get the month name
-        month_name = calendar.month_name[month]
-
-        # Construct target date string
-        TargetDate = f"{month_name} {year}"
-
-        # Iterate over each day in the month
-        for day in range(1, num_days + 1):
-            # Ensure day and month are zero-padded if less than 10
-            day_str = str(day).zfill(2)
-            month_str = str(month).zfill(2)
-
-            # Construct target date string
-            TargetDate = f"{year}-{month_str}-{day_str}"
-
-            query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
-
-            # Check if documents exist for the given query
             if check_existing_document(existing_collection, query):
-                print(f'{CameraName} Camera Found in Age Collection for {TargetDate}')
-
-                # Define the aggregation pipeline with dynamic date filtering
+                print(f'{CameraName} Camera Found in {ModelName} Collection')
                 pipeline = [
-                    {
-                        "$match": query
-                    },
-                    {
-                        "$group": {
-                            "_id": "$Date",
-                            "documents": {"$push": "$$ROOT"}
-                        }
-                    }
+                    {"$match": query},
+                    {"$project": {
+                        "Second": {"$second": "$Timestamp"},
+                        "Count": "$Count",
+                        "_id": 0
+                    }}
                 ]
 
-                # Execute the aggregation pipeline
                 result = list(existing_collection.aggregate(pipeline))
-                print(f'Documents found for {CameraName} on {TargetDate}')
-                
-                    # Prepare data for DataFrame
-                for item in result:
-                    cleaned_documents = []
-                    for doc in item['documents']:
-                            if 'Camera Info' in doc:
-                                doc['Camera Info'].pop('_id', None)
-                                doc.pop('_id', None)
-                            cleaned_documents.append(doc)
+                print(result)
+                if result:
+                    for item in result:
+                        second = item['Second']
+                        count = item['Count']
+                        time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count': count, 'Second': second})
 
-                    daily_data = {
-                            'Time Range': month_name,
-                            'Data': cleaned_documents,
-                            'Camera Name': CameraName
-                        }
-                    monthly_data.append(daily_data)                
+                break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+            return [dictionary]
+        
+            # for second in range(60):
+            #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+            #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Count': 0, 'Second': second})
+
+            
+            # return data
+        
+        else:
+            return data
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+        return [dictionary]
+
+    
+def postcam_getvechileSeconds(CameraName, minute, hour, day, month, year):
+    """
+    Filter data by date and hour and get all count data for all models applied to a specific camera, grouped by seconds within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+
+    model_collection_mapping = {
+        'vehicle': 'ModelVehicleData',
+    }
+    hour = int(hour)
+    hour = hour - 2
+    
+    minute = int(minute)
+
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
+
+            query = {
+                'Camera Info.Camera Name': CameraName,
+                'Date': TargetDate,
+                '$expr': {'$and': [
+                    {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                    {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                    {'$gte': [{'$second': '$Timestamp'}, 0]},
+                    {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+                ]}
+            }
+
+            if check_existing_document(existing_collection, query):
+                print(f'{CameraName} Camera Found in {ModelName} Collection')
+                pipeline = [
+                    {"$match": query},
+                    {"$project": {
+                        "Second": {"$second": "$Timestamp"},
+                        "Count": "$Count",
+                        "_id": 0
+                    }}
+                ]
+
+                result = list(existing_collection.aggregate(pipeline))
+                print(result)
+                if result:
+                    for item in result:
+                        second = item['Second']
+                        count = item['Count']
+                        time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                        data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count': count, 'Second': second})
+
+                break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+            return [dictionary]
+        
+            # for second in range(60):
+            #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+            #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Count': 0, 'Second': second})
+
+            
+            # return data
+        
+        else:
+            return data
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+        return [dictionary]
+
+# pprint.pprint(postcam_getvechileSeconds('MinutesTesting',8,12,25,3,2024))
+
+# pprint.pprint(postcam_getallmodelsperMinutes('MinutesTesting',11,25,3,2024))
+
+def get_all_cameras_count_perSecond(minute, hour, day, month, year):
+    """
+    Filter data by date and hour and get all count data for all models applied to a specific camera, grouped by seconds within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'crossingBorder': 'ModelCountingData',
+        'crowdedDensity': 'ModelDensityData',
+        'crowded': 'ModelCrowdedData',
+    }
+
+    hour = int(hour)
+    hour = hour - 2
+    
+    minute = int(minute)
+
+    all_data = []
+    camera_names = finding_camera_names()
+    # camera_names = ['aslom', 'MinutesTesting']    
+     
+    try:
+        for CameraName in camera_names:
+            print('Getting Data of :' , CameraName)
+            data = []  # Initialize data list for each camera           
+            for ModelName, collection_name in model_collection_mapping.items():
+                existing_collection = db[collection_name]
+
+                query = {
+                    'Camera Info.Camera Name': CameraName,
+                    'Date': TargetDate,
+                    '$expr': {'$and': [
+                        {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                        {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                        {'$gte': [{'$second': '$Timestamp'}, 0]},
+                        {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+                    ]}
+                }
+
+                if check_existing_document(existing_collection, query):
+                    print(f'{CameraName} Camera Found in {ModelName} Collection')
+                    pipeline = [
+                        {"$match": query},
+                        {"$project": {
+                            "Second": {"$second": "$Timestamp"},
+                            "Count": "$Count",
+                            "_id": 0
+                        }}
+                    ]
+
+                    result = list(existing_collection.aggregate(pipeline))
+                    print(result)
+                    if result:
+                        for item in result:
+                            second = item['Second']
+                            count = item['Count']
+                            time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count': count, 'Second': second})
+
+                    break
+
+            if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+                # return [dictionary]
+            
+                # for second in range(60):
+                #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Count': 0, 'Second': second})
 
                 
+                # return data
+            
             else:
-                print(f'No documents found for {CameraName} on {TargetDate}')
+                all_data.append(data)
+        return all_data
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+        return [[dictionary]]
 
-        if len(monthly_data) != 0:
-            yearly_data.extend(monthly_data)
+# pprint.pprint(get_all_cameras_count_perSecond(19,11,25,3,2024))
+    
+def get_all_vechile_count_perSecond(minute, hour, day, month, year):
+    """
+    Filter data by date and hour and get all count data for all models applied to a specific camera, grouped by seconds within the specified minute.
 
-    if len(yearly_data) != 0:
-        return yearly_data
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'vehicle': 'ModelVehicleData',
+    }
+
+    hour = int(hour)
+    hour = hour - 2
+    
+    minute = int(minute)
+
+    all_data = []
+    camera_names = finding_camera_names()
+    # camera_names = ['aslom', 'MinutesTesting']    
+     
+    try:
+        for CameraName in camera_names:
+            print('Getting Data of :' , CameraName)
+            data = []  # Initialize data list for each camera           
+            for ModelName, collection_name in model_collection_mapping.items():
+                existing_collection = db[collection_name]
+
+                query = {
+                    'Camera Info.Camera Name': CameraName,
+                    'Date': TargetDate,
+                    '$expr': {'$and': [
+                        {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                        {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                        {'$gte': [{'$second': '$Timestamp'}, 0]},
+                        {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+                    ]}
+                }
+
+                if check_existing_document(existing_collection, query):
+                    print(f'{CameraName} Camera Found in {ModelName} Collection')
+                    pipeline = [
+                        {"$match": query},
+                        {"$project": {
+                            "Second": {"$second": "$Timestamp"},
+                            "Count": "$Count",
+                            "_id": 0
+                        }}
+                    ]
+
+                    result = list(existing_collection.aggregate(pipeline))
+                    print(result)
+                    if result:
+                        for item in result:
+                            second = item['Second']
+                            count = item['Count']
+                            time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                            data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': ModelName, 'Count': count, 'Second': second})
+
+                    break
+
+            if len(data) == 0:
+                dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+                # return [dictionary]
+            
+                # for second in range(60):
+                #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Count': 0, 'Second': second})
+
+                
+                # return data
+            
+            else:
+                all_data.append(data)
+        return all_data
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Count': 0, 'Model': 'Not Found', 'Second': -1}
+        return [[dictionary]]
+    
+# pprint.pprint(get_all_vechile_count_perSecond(8,12,25,3,2024))
+
+
+def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, year):
+    """
+    Filter data by date and hour, and get the sum for male, female, and total count for each second within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing second-wise count for male, female, and total count for the given minute.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    existing_collection = db['ModelGenderData']
+
+    hour = int(hour)
+    minute = int(minute)
+    hour = hour -2
+    query = {
+        'Camera Info.Camera Name': CameraName,
+        'Date': TargetDate,
+        '$expr': {'$and': [
+            {'$eq': [{'$hour': '$Timestamp'}, hour]},
+            {'$eq': [{'$minute': '$Timestamp'}, minute]},
+            {'$gte': [{'$second': '$Timestamp'}, 0]},
+            {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+        ]}
+    }
+
+    data = []
+    if check_existing_document(existing_collection, query):
+        print(f'{CameraName} Camera Found in Gender Collection')
+
+        pipeline = [
+            {"$match": query},
+            {"$unwind": "$Label"},
+            {"$group": {
+                "_id": {
+                    "Second": {"$second": "$Timestamp"},
+                    "Gender": "$Label.Gender"
+                },
+                "count": {"$sum": 1}
+            }},
+            {"$project": {
+                "Second": "$_id.Second",
+                "Gender": "$_id.Gender",
+                "Count": "$count",
+                "_id": 0
+            }},
+            {"$sort": {"Second": 1}}
+        ]
+
+        result = list(existing_collection.aggregate(pipeline))
+        if result:
+            for item in result:
+                second = item['Second']
+                gender = item['Gender']
+                count = item['Count']
+
+                data.append({
+                    'Time Range': f"{hour+2:02}:{minute:02}:{second:02}",
+                    'Gender': gender,
+                    'Count': count,
+                    'Second': second
+                })
+        # Create DataFrame from collected data
+        df = pd.DataFrame(data)
+        # Pivot DataFrame to get male and female counts    
+        df_pivot = df.pivot_table(index='Second', columns='Gender', values='Count', aggfunc='sum', fill_value=0)
+        # Add a total count column
+        # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+        # Ensure all seconds in the minute are covered, and fill in missing seconds with zero counts
+        # all_seconds = [second for second in range(60)]
+        # df_pivot = df_pivot.reindex(all_seconds, fill_value=0)
+        df_pivot.columns.name = None
+        df_pivot.reset_index(inplace=True)                
+        try :                                        
+                try :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName   
+                except : 
+                            df_pivot['Total Count'] = df_pivot['Female'] 
+                            df_pivot['Female'] = 0                        
+                            df_pivot['Camera Name'] = CameraName                   
+        except :
+                            df_pivot['Total Count'] = df_pivot['Male'] 
+                            df_pivot['Female'] = 0                        
+                            df_pivot['Camera Name'] = CameraName     
+        df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
+
+    if len(data) == 0:
+        # If no data found for the given minute, return a dictionary with zero counts for all seconds
+        dictionary = [{'Camera Name': CameraName, 'Time Range': f"{hour:02}:{minute:02}:{second:02}", 'Female': 0, 'Male': 0, 'Total Count': 0, 'Second': second} for second in range(60)]
+        return dictionary
     else:
-        data = {'Time Range': year,
-                'Camera Name': CameraName,
-                'Data': []}
-        # return data
-        return [data]
+        dictionary = df_pivot.to_dict(orient='records')
+        return dictionary
+
+# hour_data = gender_filtering_Seconds_aggregates('GenderTest', 13,8, 25,3, 2024)
+# pprint.pprint(hour_data)
+
+
+def get_all_cameras_genderPerSeconds(minute, hour, day, month, year):
+    """
+    Filter data by date and hour, and get the sum for male, female, and total count for each second within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing second-wise count for male, female, and total count for the given minute.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
     
-def all_cameras_in_Age():
-    # Specify the collection names directly
-    collection_name = 'ModelAgeData'
-    
+    TargetDate = f"{year}-{month_str}-{day_str}"
 
-    
-    # Check if the collection exists
-    if collection_name not in db.list_collection_names():
-        camera_names = distinct_camera_names
-        return camera_names
+    existing_collection = db['ModelGenderData']
 
-    existing_collection = db[collection_name]
-    
-    distinct_camera_names = existing_collection.distinct('Camera Info.Camera Name')
+    hour = int(hour)
+    minute = int(minute)
+    hour = hour -2
+    camera_names =  all_cameras_in_model('gender')['Camera Names']
+    print(camera_names)
+    # camera_names = ['aslom','GenderTest','FristCam']
+    all_data = []
+    for CameraName in camera_names :
+        print('Getting Data of :' , CameraName)
+        # Query to filter by camera name and date
+        query = {
+            'Camera Info.Camera Name': CameraName,
+            'Date': TargetDate,
+            '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+        }        
+        data = []        
 
-    camera_names =distinct_camera_names
-    return camera_names    
-######################################################
-# def get_all_cameras_violencePerMinutes(hour, day, month, year):
-#     """
-#     Filter data by date and hour, and get the count for male, female, and total count for each minute within that hour.
+        if check_existing_document(existing_collection, query):
+            print(f'{CameraName} Camera Found in Gender Collection')
 
-#     Args:
-#         hour (int): Hour for which data is to be aggregated.
-#         day (int): Day component of the date.
-#         month (int): Month component of the date.
-#         year (int): Year component of the date.
+            pipeline = [
+                {"$match": query},
+                {"$unwind": "$Label"},
+                {"$group": {
+                    "_id": {
+                        "Second": {"$second": "$Timestamp"},
+                        "Gender": "$Label.Gender"
+                    },
+                    "count": {"$sum": 1}
+                }},
+                {"$project": {
+                    "Second": "$_id.Second",
+                    "Gender": "$_id.Gender",
+                    "Count": "$count",
+                    "_id": 0
+                }},
+                {"$sort": {"Second": 1}}
+            ]
 
-#     Returns:
-#         pandas.DataFrame: DataFrame containing minute-wise count for male, female, and total count for the given hour.
-#     """
-#     # Ensure month, day, and hour are zero-padded if less than 10
-#     month_str = str(month).zfill(2)
-#     day_str = str(day).zfill(2)
-#     hour = int(hour) 
-#     hour -=2
-#     # Construct target date string
-#     TargetDate = f"{year}-{month_str}-{day_str}"
+            result = list(existing_collection.aggregate(pipeline))
+            if result:
+                for item in result:
+                    second = item['Second']
+                    gender = item['Gender']
+                    count = item['Count']
 
-#     existing_collection = db['ModelViolenceData']
+                    data.append({
+                        'Time Range': f"{hour+2:02}:{minute:02}:{second:02}",
+                        'Gender': gender,
+                        'Count': count,
+                        'Second': second
+                    })
+            # Create DataFrame from collected data
+            df = pd.DataFrame(data)
+            # Pivot DataFrame to get male and female counts    
+            df_pivot = df.pivot_table(index='Second', columns='Gender', values='Count', aggfunc='sum', fill_value=0)
+            # Add a total count column
+            # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+            # Ensure all seconds in the minute are covered, and fill in missing seconds with zero counts
+            # all_seconds = [second for second in range(60)]
+            # df_pivot = df_pivot.reindex(all_seconds, fill_value=0)
+            df_pivot.columns.name = None
+            df_pivot.reset_index(inplace=True)                
+            try :                                        
+                    try :
+                            # Add a total count column
+                                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                                df_pivot['Camera Name'] = CameraName   
+                    except : 
+                                df_pivot['Total Count'] = df_pivot['Female'] 
+                                df_pivot['Female'] = 0                        
+                                df_pivot['Camera Name'] = CameraName                   
+            except :
+                                df_pivot['Total Count'] = df_pivot['Male'] 
+                                df_pivot['Female'] = 0                        
+                                df_pivot['Camera Name'] = CameraName 
+            df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
+                                                
+        if len(data) == 0:
+            # If no data found for the given minute, return a dictionary with zero counts for all seconds
+            dictionary = [{'Camera Name': CameraName, 'Time Range': f"{hour:02}:{minute:02}:{second:02}", 'Female': 0, 'Male': 0, 'Total Count': 0, 'Second': second} for second in range(60)]
+            # return dictionary
+        else:
+            dictionary = df_pivot.to_dict(orient='records')
+            all_data.append(dictionary)
 
-#     camera_names =  all_cameras_in_violence()
-#     print(camera_names)
-#     # camera_names = ['aslom','GenderTest','FristCam']
-#     all_data = []
-#     for CameraName in camera_names :
-#         print('Getting Data of :' , CameraName)
-#         # Query to filter by camera name and date
-#         query = {
-#             'Camera Info.Camera Name': CameraName,
-#             'Date': TargetDate,
-#             '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
-#         }        
-#         data = []    
-#         # if check_existing_document(existing_collection, query):
-#         #     print(f'{CameraName} Camera Found in violence Collection')
+    return    all_data      
 
-#         pipeline = [
-#             {"$match": query},
-#             {"$unwind": "$Label"},
-#             {"$group": {
-#                 "_id": {
-#                     "Minute": {"$minute": "$Timestamp"},
-#                     "Label": "$violence.Label"
-#                 },
-#                 # "Label": {"$max"}
-#             }},
-#             {"$project": {
-#                 "Minute": "$_id.Minute",
-#                 "Label": "$Label.violence",
-#                 # "Count": "$count",
-#                 "_id": 0
-#             }},
-#             {"$sort": {"Minute": 1}}
-#         ]
 
-#         result = list(existing_collection.aggregate(pipeline))
-#         print(f"result is: {result}")
-#         if result:
-#             for item in result:
-#                 minute = item['Minute']
-#                 time_range = f"{hour+2:02}:{minute:02}"  # Construct time range in HH:MM format
-#                 violence = item['Label']
-#                 count = item['Count']
-
-#                 data.append({
-#                     'Time Range': time_range,
-#                     'Label': violence,
-#                     'Count': count,
-#                 })
-
-                # # Create DataFrame from collected data
-                # df = pd.DataFrame(data)
-                # # Pivot DataFrame to get male and female counts separately
-                # df_pivot = df.pivot_table(index='Time Range', columns='Label', values='Count', aggfunc='sum',
-                #                         fill_value=0)
-
-                # # Add a total count column
-                # df_pivot['Total Count'] = df_pivot['No Voilence'] + df_pivot['Voilence']
-                # # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
-                # all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
-                # df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
-                # df_pivot.columns.name = None
-                # df_pivot.reset_index(inplace=True)
-                    
-                # try :                                        
-                #             try :
-                #             # Add a total count column
-                #                 df_pivot['Total Count'] = df_pivot['No Voilence'] + df_pivot['Voilence']
-                #                 df_pivot['Camera Name'] = CameraName   
-                #             except : 
-                #                 df_pivot['Total Count'] = df_pivot['Voilence'] 
-                #                 df_pivot['Voilence'] = 0                        
-                #                 df_pivot['Camera Name'] = CameraName                   
-                # except :
-                #                 df_pivot['Total Count'] = df_pivot['No Voilence'] 
-                #                 df_pivot['No Voilence'] = 0                        
-
-                #                 df_pivot['Camera Name'] = CameraName              
-                            
-
-#         if len(data) == 0:
-#                     dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
-#                                 "Label":"No Voilence", 'Total Count': 0}
-#                     return dictionary
-#         # else :
-#         #         dictionary = df_pivot.to_dict(orient='records')
-#         #         all_data.append(dictionary)
-#     return all_data    
-
-# pprint.pprint(get_all_cameras_violencePerMinutes(17,25,3,2024))
+# hour_data = get_all_cameras_genderPerSeconds(13,8, 25,3, 2024)
+# pprint.pprint(hour_data)
