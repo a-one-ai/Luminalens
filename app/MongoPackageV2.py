@@ -5287,6 +5287,181 @@ def Age_filtering_year_aggregates(CameraName, year):
     # Return the DataFrame
     return df
 
-             
+###############################################################
+def postcam_getviolenceperMinutes(cameraName, hour, day, month, year):
+    """
+    Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    model_collection_mapping = {
+        'violence':'ModelViolenceData',
+    }
+
+    hour = int(hour)
+    hour = hour - 2
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
+
+            query = {
+                'Camera Info.Camera Name': cameraName,
+                'Date': TargetDate,
+                '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+            }
+
+            if check_existing_document(existing_collection, query):
+                print(f'{cameraName} Camera Found in {ModelName} Collection')
+                pipeline = [
+                    {"$match": query},
+                    {"$group": {
+                        "_id": {
+                            "minute": {"$minute": "$Timestamp"}
+                        },
+                        "Label": {"$max": "$Label"}
+                    }},
+                    {"$project": {
+                        "Minute": "$_id.minute",
+                        "Label": "$Label",
+                        "_id": 0
+                    }}
+                ]
+
+                result = list(existing_collection.aggregate(pipeline))
+                # print(result)
+                if result:
+                    for item in result:
+                        minute = item['Minute']
+                        Label = item['Label']
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': cameraName, 'Time Range': time_range, 'Model': ModelName, 'Label': Label})
+
+                    for minute in range(60):
+                        time_range = f"{hour + 2:02}:{minute:02}"
+                        data.append({'Camera Name': cameraName, 'Time Range': time_range, 'Model': ModelName, 'Label': Label})
+
+                    break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': cameraName, 'Time Range': TargetDate, 'Label': 'No violence', 'Model': 'Not Found'}
+            return dictionary
+        else:
+            data.sort(key=lambda x: x['Time Range'])
+            df = pd.DataFrame(data)
+            df = df.sort_values(by=['Time Range', 'Label'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+            dictionary = df.to_dict(orient='records')
+            return dictionary
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': cameraName, 'Time Range': 'Null', 'Label': "Null", 'Model': 'Not Found'}
+        return dictionary
+
+
+
+# pprint.pprint(postcam_getviolenceperMinutes('MARY',10,27,3,2024))
+
+def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
+    """
+    Filter data by date and hour and get all count data for violence applied to a specific camera, grouped by seconds within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+
+    model_collection_mapping = {
+        'violence':'ModelViolenceData',
+    }
+    hour = int(hour)
+    hour = hour - 2
+    
+    minute = int(minute)
+
+    data = []
+    try:
+        for ModelName, collection_name in model_collection_mapping.items():
+            existing_collection = db[collection_name]
+
+            query = {
+                'Camera Info.Camera Name': cameraName,
+                'Date': TargetDate,
+                '$expr': {'$and': [
+                    {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                    {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                    {'$gte': [{'$second': '$Timestamp'}, 0]},
+                    {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+                ]}
+            }
+
+            if check_existing_document(existing_collection, query):
+                print(f'{cameraName} Camera Found in {ModelName} Collection')
+                pipeline = [
+                    {"$match": query},
+                    {"$project": {
+                        "Second": {"$second": "$Timestamp"},
+                        "Label": "$Label",
+                        "_id": 0
+                    }}
+                ]
+
+                result = list(existing_collection.aggregate(pipeline))
+                if result:
+                    for item in result:
+                        second = item['Second']
+                        Label = item['Label']
+                        time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+                        data.append({'Camera Name': cameraName, 'Time Range': time_range, 'Model': ModelName, 'Label': Label, 'Second': second})
+
+                break
+
+        if len(data) == 0:
+            dictionary = {'Camera Name': cameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Label': "Null", 'Model': 'Not Found', 'Second': -1}
+            return [dictionary]
+        
+            # for second in range(60):
+            #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
+            #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Label': Label, 'Second': second})
+
+            
+            # return data
+        
+        else:
+            return data
+
+    except Exception as e:
+        print(e)
+        dictionary = {'Camera Name': cameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Label': "Null", 'Model': 'Not Found', 'Second': -1}
+        return [dictionary]
+
+# pprint.pprint(postcam_getviolenceSeconds('MARY',40,11,27,3,2024))
+
+                 
 
 

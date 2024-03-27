@@ -1319,6 +1319,8 @@ def violence_Docs():
             return jsonify({'mess': "No data provided" }) 
         print(data)
         cameraName = data.get('cameraname')
+        minute =data.get('minute')
+        hour = data.get('hour')
         day = data.get('day')
         month = data.get('month')
         year = data.get('year')
@@ -1327,14 +1329,17 @@ def violence_Docs():
         docs = None 
         print(cameraName)
         print(day)
-        
-        if  cameraName and day and month and year :
-            docs = VoilenceFilteringH(cameraName, day, month, year)
-            # print(type(docs))
-            # pprint.pprint(docs)
+        if cameraName and minute and hour and day and month and year:
+            docs = postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year)
             return jsonify(docs) 
-
-
+        
+        elif cameraName and hour and day and month and year:
+            docs = postcam_getviolenceperMinutes(cameraName, hour, day, month, year)
+            return jsonify(docs) 
+        
+        elif  cameraName and day and month and year :
+            docs = VoilenceFilteringH(cameraName, day, month, year)
+            return jsonify(docs) 
 
         elif cameraName and not day and month and year:
             docs  = VoilenceFilteringM(cameraName, month, year)
@@ -1354,6 +1359,8 @@ def violence_filter():
     if not data:
         return jsonify({'mess': "No data provided" }) 
     print(data)
+    minute =data.get('minute')
+    hour = data.get('hour')
     day = data.get('day')
     month = data.get('month')
     year = data.get('year')
@@ -1361,9 +1368,17 @@ def violence_filter():
     camera_names = all_cameras_in_violence()
     print(camera_names)
     for cameraName in camera_names:
-        if  cameraName and day and month and year :
+        if cameraName and minute and hour and day and month and year:
+            docs = postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year)
+            newdoc.append(docs)   
+
+        elif cameraName and hour and day and month and year :
+            docs = postcam_getviolenceperMinutes(cameraName, hour, day, month, year)
+            newdoc.append(docs)   
+        elif  cameraName and day and month and year :
             docs = VoilenceFilteringH(cameraName, day, month, year)
             newdoc.append(docs)
+         
         elif cameraName and not day and month and year:
             docs  = VoilenceFilteringM(cameraName, month, year)
             newdoc.append(docs)        
