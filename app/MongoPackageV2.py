@@ -1211,8 +1211,8 @@ def all_cameras_in_model(ModelName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
-
+        'clothes color': 'ModelClothesColorData',
+        'Age' : 'ModelAgeData'
           }
 
     # Get the collection based on ModelName
@@ -1229,6 +1229,8 @@ def all_cameras_in_model(ModelName) :
     dictionary = {'Model' : ModelName ,'Camera Names' :distinct_camera_names }
     return dictionary
 
+# pprint.pprint(all_cameras_in_model('Age'))
+
 #____________________________________________________________________________
 def all_models_in_camera(CameraName) :
     
@@ -1239,7 +1241,8 @@ def all_models_in_camera(CameraName) :
         'crossingBorder': 'ModelCountingData',
         'crowded': 'ModelCrowdedData',
         'gender': 'ModelGenderData',
-        'clothes color': 'ModelClothesColorData'
+        'clothes color': 'ModelClothesColorData',
+        'Age' : 'ModelAgeData'        
 }
     
     models_list = []
@@ -1272,7 +1275,9 @@ def all_camera_info(CameraName) :
             'crossingBorder': 'ModelCountingData',
             'crowded': 'ModelCrowdedData',
             'gender': 'ModelGenderData',
-            'clothes color': 'ModelClothesColorData'
+            'clothes color': 'ModelClothesColorData',
+            'Age' : 'ModelAgeData'
+            
  }
         
         models_list = []
@@ -1388,6 +1393,8 @@ def clothes_filtering(CameraName, color):
 # data = clothes_filtering('ClothesTest', 'Yellow')
 # pprint.pprint(data)
     
+
+
 def gender_filtering_date_aggrigates(CameraName, day, month, year):
     
     """
@@ -1480,29 +1487,36 @@ def gender_filtering_date_aggrigates(CameraName, day, month, year):
             
             # Rename columns for clarity
             df_pivot.columns.name = None
-            
+            # print(df_pivot)
             try :                                        
-                    try :
+                    if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
                     # Add a total count column
                         df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
                         df_pivot['Camera Name'] = CameraName   
-                    except : 
-                        df_pivot['Total Count'] = df_pivot['Female'] 
-                        df_pivot['Female'] = 0                        
-                        df_pivot['Camera Name'] = CameraName                   
-            except :
-                        df_pivot['Total Count'] = df_pivot['Male'] 
-                        df_pivot['Female'] = 0                        
 
+                    elif 'Male' not in list(df_pivot.columns) : 
+                        df_pivot['Male'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName  
+
+                    elif 'Female' not in list(df_pivot.columns) : 
+                        df_pivot['Female'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
                         df_pivot['Camera Name'] = CameraName              
-            
+
+            except :
+                        df_pivot['Female'] = 0     
+                        df_pivot['Male'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName              
+                                           
 
     if len(data) == 0:
                 dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
                               'Female' : 0 ,'Male' :0, 'Total Count': 0}
                 return dictionary
     else :
-
+            # print(df_pivot)
             # Define the order of time ranges
             df = df_pivot.sort_values(by=['Time Range', 'Total Count'], ascending=[True, False]).drop_duplicates(subset='Time Range')
             # Define the order of time ranges
@@ -1517,9 +1531,12 @@ def gender_filtering_date_aggrigates(CameraName, day, month, year):
             # Sort DataFrame by 'Time Range'
             df.sort_values(by='Time Range', inplace=True)
             df.dropna(inplace=True)
-            return df          
-# print(gender_filtering_date_aggrigates('FristCam',9,3,2024))   
-    
+            return df      
+
+
+# print(gender_filtering_date_aggrigates('Camera_Test',20,3,2024))        
+
+
 def gender_filtering_month_aggregates(CameraName, month, year):
 
     """
@@ -1580,6 +1597,7 @@ def gender_filtering_month_aggregates(CameraName, month, year):
 
 # print(gender_filtering_month_aggregates('FristCam',3,2024))    
 
+
 def gender_filtering_year_aggregates(CameraName, year):
     """
     Filter data by year and get the total count for male and female for each month.
@@ -1633,6 +1651,8 @@ def gender_filtering_year_aggregates(CameraName, year):
     # Return the DataFrame
     return df
 
+
+# print(gender_filtering_year_aggregates('FristCam',2024))
 
 
 def VoilenceFilteringH(CameraName, day, month, year):
@@ -3388,20 +3408,28 @@ def get_all_cameras_genderPerH( day, month, year):
                 
                 # Rename columns for clarity
                 df_pivot.columns.name = None
+                # print(df_pivot)
                 try :                                        
-                    try :
-                    # Add a total count column
-                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
-                        df_pivot['Camera Name'] = CameraName   
-                    except : 
-                        df_pivot['Male'] = 0
-                        df_pivot['Total Count'] = df_pivot['Female'] 
-                        df_pivot['Camera Name'] = CameraName                   
-                except :
-                        df_pivot['Female'] = 0                        
-                        df_pivot['Total Count'] = df_pivot['Male'] 
-                        df_pivot['Camera Name'] = CameraName               
+                        if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName   
+                        elif 'Male' not in list(df_pivot.columns) : 
+                            df_pivot['Male'] = 0     
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName                   
+                        elif 'Female' not in list(df_pivot.columns) : 
+                        
+                            df_pivot['Female'] = 0                        
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName              
 
+                except :
+                            df_pivot['Female'] = 0     
+                            df_pivot['Male'] = 0       
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName                
+                
         if len(data) == 0:
                     dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
                                 'Female' : 0 ,'Male' :0, 'Total Count': 0}
@@ -3426,6 +3454,7 @@ def get_all_cameras_genderPerH( day, month, year):
                 all_data.append(dictionary)
 
     return all_data
+
 # pprint.pprint(get_all_cameras_genderPerH(9,3,2024))   
     
 def get_all_cameras_genderPerM(month, year):
@@ -3556,7 +3585,6 @@ def get_all_cameras_genderPerY(year):
 
 # pprint.pprint(get_all_cameras_genderPerY(2024))    
 
-
 def all_cameras_in_violence():
     # Specify the collection names directly
     collection_name = 'ModelViolenceData'
@@ -3623,8 +3651,6 @@ def update_camera_status_models_collection(CameraName):
             update_query = {"$set": {"Camera Info.Status": new_status}}
             existing_collection.update_many(query, update_query)
             print(f"Updated status for colllection '{model_name}' documents containing camera '{CameraName}' to '{new_status}'.")            
-
-
 
 # update_camera_status_models_collection('VoilenceTest')
 
@@ -4090,22 +4116,26 @@ def gender_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
             df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
             df_pivot.columns.name = None
             df_pivot.reset_index(inplace=True)
-                
             try :                                        
-                        try :
-                        # Add a total count column
-                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
-                            df_pivot['Camera Name'] = CameraName   
-                        except : 
-                            df_pivot['Total Count'] = df_pivot['Female'] 
-                            df_pivot['Female'] = 0                        
-                            df_pivot['Camera Name'] = CameraName                   
-            except :
-                            df_pivot['Total Count'] = df_pivot['Male'] 
-                            df_pivot['Female'] = 0                        
+                    if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName   
+                    elif 'Male' not in list(df_pivot.columns) : 
+                        df_pivot['Male'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName                   
+                    elif 'Female' not in list(df_pivot.columns) : 
+                    
+                        df_pivot['Female'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName              
 
-                            df_pivot['Camera Name'] = CameraName              
-                        
+            except :
+                        df_pivot['Female'] = 0     
+                        df_pivot['Male'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName           
 
     if len(data) == 0:
                 dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
@@ -4120,7 +4150,7 @@ def gender_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
 # hour_data = gender_filtering_Minutes_aggregates('GenderTest', 13, 25,3, 2024)
 # pprint.pprint(hour_data)
 
-
+#______________________________________________________________
 def get_all_cameras_genderPerMinutes(hour, day, month, year):
     """
     Filter data by date and hour, and get the count for male, female, and total count for each minute within that hour.
@@ -4206,21 +4236,29 @@ def get_all_cameras_genderPerMinutes(hour, day, month, year):
                 df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
                 df_pivot.columns.name = None
                 df_pivot.reset_index(inplace=True)
-                    
-                try :                                        
-                            try :
-                            # Add a total count column
-                                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
-                                df_pivot['Camera Name'] = CameraName   
-                            except : 
-                                df_pivot['Total Count'] = df_pivot['Female'] 
-                                df_pivot['Female'] = 0                        
-                                df_pivot['Camera Name'] = CameraName                   
-                except :
-                                df_pivot['Total Count'] = df_pivot['Male'] 
-                                df_pivot['Female'] = 0                        
 
-                                df_pivot['Camera Name'] = CameraName              
+                try :                                        
+                        if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName   
+
+                        elif 'Male' not in list(df_pivot.columns) : 
+                            df_pivot['Male'] = 0     
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName        
+
+                        elif 'Female' not in list(df_pivot.columns) : 
+    
+                            df_pivot['Female'] = 0                        
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName              
+
+                except :
+                            df_pivot['Female'] = 0     
+                            df_pivot['Male'] = 0       
+                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                            df_pivot['Camera Name'] = CameraName                   
                             
 
         if len(data) == 0:
@@ -4331,7 +4369,7 @@ def postcam_getallmodelsperSecond(CameraName, minute, hour, day, month, year):
 def postcam_getvechileSeconds(CameraName, minute, hour, day, month, year):
     """
     Filter data by date and hour and get all count data for all models applied to a specific camera, grouped by seconds within the specified minute.
-
+F
     Args:
         CameraName (str): Name of the camera.
         hour (int): Hour component of the time range.
@@ -4634,6 +4672,7 @@ def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, yea
     hour = int(hour)
     minute = int(minute)
     hour = hour -2
+    print(hour)
     query = {
         'Camera Info.Camera Name': CameraName,
         'Date': TargetDate,
@@ -4669,6 +4708,7 @@ def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, yea
         ]
 
         result = list(existing_collection.aggregate(pipeline))
+        print(result)
         if result:
             for item in result:
                 second = item['Second']
@@ -4683,6 +4723,7 @@ def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, yea
                 })
         # Create DataFrame from collected data
         df = pd.DataFrame(data)
+        print(df)
         # Pivot DataFrame to get male and female counts    
         df_pivot = df.pivot_table(index='Second', columns='Gender', values='Count', aggfunc='sum', fill_value=0)
         # Add a total count column
@@ -4693,18 +4734,25 @@ def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, yea
         df_pivot.columns.name = None
         df_pivot.reset_index(inplace=True)                
         try :                                        
-                try :
-                        # Add a total count column
-                            df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
-                            df_pivot['Camera Name'] = CameraName   
-                except : 
-                            df_pivot['Total Count'] = df_pivot['Female'] 
-                            df_pivot['Female'] = 0                        
-                            df_pivot['Camera Name'] = CameraName                   
+                    if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName   
+                    elif 'Male' not in list(df_pivot.columns) : 
+                        df_pivot['Male'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName                   
+                    elif 'Female' not in list(df_pivot.columns) : 
+                    
+                        df_pivot['Female'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName              
+
         except :
-                            df_pivot['Total Count'] = df_pivot['Male'] 
-                            df_pivot['Female'] = 0                        
-                            df_pivot['Camera Name'] = CameraName     
+                        df_pivot['Female'] = 0     
+                        df_pivot['Male'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName           
         df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
 
     if len(data) == 0:
@@ -4715,7 +4763,7 @@ def gender_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, yea
         dictionary = df_pivot.to_dict(orient='records')
         return dictionary
 
-# hour_data = gender_filtering_Seconds_aggregates('GenderTest', 13,8, 25,3, 2024)
+# hour_data = gender_filtering_Seconds_aggregates('GenderTest',10, 13, 25,3, 2024)
 # pprint.pprint(hour_data)
 
 
@@ -4754,8 +4802,13 @@ def get_all_cameras_genderPerSeconds(minute, hour, day, month, year):
         query = {
             'Camera Info.Camera Name': CameraName,
             'Date': TargetDate,
-            '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
-        }        
+            '$expr': {'$and': [
+                {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                {'$gte': [{'$second': '$Timestamp'}, 0]},
+                {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+            ]}
+                }     
         data = []        
 
         if check_existing_document(existing_collection, query):
@@ -4805,18 +4858,26 @@ def get_all_cameras_genderPerSeconds(minute, hour, day, month, year):
             df_pivot.columns.name = None
             df_pivot.reset_index(inplace=True)                
             try :                                        
-                    try :
-                            # Add a total count column
-                                df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
-                                df_pivot['Camera Name'] = CameraName   
-                    except : 
-                                df_pivot['Total Count'] = df_pivot['Female'] 
-                                df_pivot['Female'] = 0                        
-                                df_pivot['Camera Name'] = CameraName                   
+                    if 'Male' in list(df_pivot.columns) and 'Female' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName   
+                    elif 'Male' not in list(df_pivot.columns) : 
+                        df_pivot['Male'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName    
+
+                    elif 'Female' not in list(df_pivot.columns) : 
+                        df_pivot['Female'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName              
+
             except :
-                                df_pivot['Total Count'] = df_pivot['Male'] 
-                                df_pivot['Female'] = 0                        
-                                df_pivot['Camera Name'] = CameraName 
+                        df_pivot['Female'] = 0     
+                        df_pivot['Male'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                        df_pivot['Camera Name'] = CameraName       
+
             df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
                                                 
         if len(data) == 0:
@@ -4830,8 +4891,9 @@ def get_all_cameras_genderPerSeconds(minute, hour, day, month, year):
     return    all_data      
 
 
-# hour_data = get_all_cameras_genderPerSeconds(13,8, 25,3, 2024)
+# hour_data = get_all_cameras_genderPerSeconds(10,13, 25,3, 2024)
 # pprint.pprint(hour_data)
+
 ###########################################################
 def Age_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, year):
     """
@@ -4916,29 +4978,39 @@ def Age_filtering_Seconds_aggregates(CameraName, minute,hour, day, month, year):
         df_pivot.columns.name = None
         df_pivot.reset_index(inplace=True)                
         try :                                        
-                try :
-                        # Add a total count column
-                            df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
-                            df_pivot['Camera Name'] = CameraName   
-                except : 
-                            df_pivot['Total Count'] = df_pivot['Old'] 
-                            df_pivot['Old'] = 0                        
-                            df_pivot['Camera Name'] = CameraName                   
+                    if 'Old' in list(df_pivot.columns) and 'Young' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName  
+
+                    elif 'Old' not in list(df_pivot.columns) : 
+                        df_pivot['Old'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName    
+
+                    elif 'Young' not in list(df_pivot.columns) : 
+                    
+                        df_pivot['Young'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName              
+
         except :
-                            df_pivot['Total Count'] = df_pivot['Young'] 
-                            df_pivot['Young'] = 0                        
-                            df_pivot['Camera Name'] = CameraName     
+                        df_pivot['Young'] = 0     
+                        df_pivot['Old'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName  
+
         df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
 
     if len(data) == 0:
         # If no data found for the given minute, return a dictionary with zero counts for all seconds
-        dictionary = [{'Camera Name': CameraName, 'Time Range': f"{hour:02}:{minute:02}:{second:02}", 'Old': 0, 'Young': 0, 'Total Count': 0, 'Second': second} for second in range(60)]
+        dictionary = [{'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}:{second:02}", 'Old': 0, 'Young': 0, 'Total Count': 0, 'Second': second} for second in range(60)]
         return dictionary
     else:
         dictionary = df_pivot.to_dict(orient='records')
         return dictionary
 
-
+# pprint.pprint(Age_filtering_Seconds_aggregates('GenderTest',38,11,27,3,2024))
 
 def Age_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
     """
@@ -5022,20 +5094,26 @@ def Age_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
             df_pivot.reset_index(inplace=True)
                 
             try :                                        
-                        try :
-                        # Add a total count column
-                            df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
-                            df_pivot['Camera Name'] = CameraName   
-                        except : 
-                            df_pivot['Total Count'] = df_pivot['Old'] 
-                            df_pivot['Old'] = 0                        
-                            df_pivot['Camera Name'] = CameraName                   
-            except :
-                            df_pivot['Total Count'] = df_pivot['Young'] 
-                            df_pivot['Young'] = 0                        
+                    if 'Old' in list(df_pivot.columns) and 'Young' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName   
 
-                            df_pivot['Camera Name'] = CameraName              
-                        
+                    elif 'Old' not in list(df_pivot.columns) : 
+                        df_pivot['Old'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName               
+
+                    elif 'Young' not in list(df_pivot.columns) : 
+                        df_pivot['Young'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName              
+
+            except :
+                        df_pivot['Young'] = 0     
+                        df_pivot['Old'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName     
 
     if len(data) == 0:
                 dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
@@ -5044,8 +5122,10 @@ def Age_filtering_Minutes_aggregates(CameraName, hour, day, month, year):
     else :
             dictionary = df_pivot.to_dict(orient='records')
             return dictionary
+    
+# pprint.pprint(Age_filtering_Minutes_aggregates('GenderTest',11,27,3,2024))
 
-def Age_filtering_date_aggrigates(CameraName, day, month, year):
+def Age_filtering_date_aggregates(CameraName, day, month, year):
     
     """
     Filter data by date and get the average count in the form of time range.
@@ -5139,20 +5219,26 @@ def Age_filtering_date_aggrigates(CameraName, day, month, year):
             df_pivot.columns.name = None
             
             try :                                        
-                    try :
+                    if 'Old' in list(df_pivot.columns) and 'Young' in list(df_pivot.columns) :
                     # Add a total count column
-                        df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
                         df_pivot['Camera Name'] = CameraName   
-                    except : 
-                        df_pivot['Total Count'] = df_pivot['Old'] 
-                        df_pivot['Old'] = 0                        
+                    elif 'Old' not in list(df_pivot.columns) : 
+                        df_pivot['Old'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
                         df_pivot['Camera Name'] = CameraName                   
-            except :
-                        df_pivot['Total Count'] = df_pivot['Young'] 
+                    elif 'Young' not in list(df_pivot.columns) : 
+                    
                         df_pivot['Young'] = 0                        
-
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
                         df_pivot['Camera Name'] = CameraName              
-            
+
+            except :
+                        df_pivot['Young'] = 0     
+                        df_pivot['Old'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName              
+                                           
 
     if len(data) == 0:
                 dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
@@ -5174,7 +5260,11 @@ def Age_filtering_date_aggrigates(CameraName, day, month, year):
             # Sort DataFrame by 'Time Range'
             df.sort_values(by='Time Range', inplace=True)
             df.dropna(inplace=True)
+            dictionary = df.to_dict(orient='records')
             return df          
+
+# pprint.pprint(Age_filtering_date_aggregates('GenderTest',27,3,2024))  
+
   
 def Age_filtering_month_aggregates(CameraName, month, year):
 
@@ -5202,7 +5292,7 @@ def Age_filtering_month_aggregates(CameraName, month, year):
     # Iterate over all days in the month
     for day in range(1, num_days + 1):
         # Retrieve data for the specific day using the existing function
-        daily_data = gender_filtering_date_aggrigates(CameraName, day, month, year)
+        daily_data = Age_filtering_date_aggregates(CameraName, day, month, year)
         
         # If there's no data for the day, add zeros for old and young counts
         if isinstance(daily_data, dict): # If there's no data for the day
@@ -5214,8 +5304,9 @@ def Age_filtering_month_aggregates(CameraName, month, year):
                 'Total Count': 0
             })
         else:
+            # print(daily_data)
             # Calculate the total count for old and young for the day
-            Old_count = daily_data['Old'].sum()
+            Old_count =  daily_data['Old'].sum()
             Young_count = daily_data['Young'].sum()
             total_count = Old_count + Young_count
             
@@ -5230,9 +5321,13 @@ def Age_filtering_month_aggregates(CameraName, month, year):
 
     # Convert the list of dictionaries to a DataFrame
     df = pd.DataFrame(data)
-
+    dictionary = df.to_dict(orient='records')
     # Return the DataFrame
-    return df     
+    return df
+
+
+# pprint.pprint(Age_filtering_month_aggregates('GenderTest',3,2024))  
+
 
 def Age_filtering_year_aggregates(CameraName, year):
     """
@@ -5261,7 +5356,7 @@ def Age_filtering_year_aggregates(CameraName, year):
         # Iterate over all days in the month
         for day in range(1, num_days + 1):
             # Retrieve data for the specific day using the existing function
-            daily_data = gender_filtering_date_aggrigates(CameraName, day, month, year)
+            daily_data = Age_filtering_date_aggregates(CameraName, day, month, year)
             
             # If there's data for the day, sum the male and female counts
             if not isinstance(daily_data, dict): # If there's no data for the day
@@ -5287,18 +5382,541 @@ def Age_filtering_year_aggregates(CameraName, year):
     # Return the DataFrame
     return df
 
+             
+# pprint.pprint(Age_filtering_year_aggregates('GenderTest',2024))  
+
+def get_all_cameras_agePerH( day, month, year):
+    
+    """
+    Filter data by date and get the average count in the form of time range.
+
+    Args:
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        List: List containing month, total count, camera name, and model for each month in the year.
+    """
+    # Ensure month and day are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+
+    # Construct target date string
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    existing_collection = db['ModelAgeData']
+    # camera_names = finding_camera_names()
+    camera_names =  all_cameras_in_model('Age')['Camera Names']
+    # camera_names = ['aslom','GenderTest','FristCam']
+    all_data = []
+    for CameraName in camera_names :
+        print('Getting Data of :' , CameraName)
+        # Query to filter by camera name and date
+        query = {'Camera Info.Camera Name': CameraName, 'Date': TargetDate}
+        data = []
+        if check_existing_document(existing_collection, query):
+            print(f'{CameraName} Camera Found in Age Collection')
+            
+            pipeline = [
+                {"$match": query},
+                {"$unwind": "$Label"},
+                {"$group": {
+                    "_id": {
+                        "Hour": {"$hour": "$Timestamp"},
+                        "Age": "$Label.Age"
+                    },
+                    "count": {"$sum": 1}
+                }},
+                {"$project": {
+                    "Hour": "$_id.Hour",
+                    "Age": "$_id.Age",
+                    "Count": "$count",
+                    "_id": 0
+                }},
+                {"$sort": {"Hour": 1}}
+            ]
+
+
+            result = list(existing_collection.aggregate(pipeline))
+            # print(result)
+            if result:
+                
+                for item in result:
+                    hour = item['Hour']
+                    Age = item['Age']
+                    count = item['Count']
+                                    
+                    
+                    # Adjusting hour for display
+                    am_pm = "PM" if (hour + 2) >= 12 else "AM"
+                    formatted_hour = (hour + 2) if (hour + 2) <= 12 else (hour + 2) - 12
+                    time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
+                        
+                    data.append({
+                        'Time Range': time_range,
+                        'Age': Age,
+                        'Count': count,
+                    })
+
+                    for hour in range(24):
+                            am_pm = "PM" if (hour) >= 12 else "AM"
+                            formatted_hour = (hour) if (hour) <= 12 else (hour) - 12
+                            time_range = f"{formatted_hour} {am_pm} - {formatted_hour + 1} {am_pm}"
+                    
+                            data.append({
+                                'Time Range': time_range,
+                                'Age': Age,
+                                'Count': 0,
+                            })
+                            
+                
+                # Create DataFrame from collected data
+                df = pd.DataFrame(data)
+                # print(df)    
+                # Pivot DataFrame to get male and female counts separately
+                df_pivot = df.pivot_table(index='Time Range', columns='Age', values='Count', aggfunc='sum', fill_value=0)
+                
+                # Reset index to make 'Time Range' a column
+                df_pivot.reset_index(inplace=True)
+                
+                # Rename columns for clarity
+                df_pivot.columns.name = None
+                # print(df_pivot)
+                try :                                        
+                        if 'Old' in list(df_pivot.columns) and 'Young' in list(df_pivot.columns) :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName   
+                        elif 'Old' not in list(df_pivot.columns) : 
+                            df_pivot['Old'] = 0     
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName                   
+                        elif 'Young' not in list(df_pivot.columns) : 
+                        
+                            df_pivot['Young'] = 0                        
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName              
+
+                except :
+                            df_pivot['Young'] = 0     
+                            df_pivot['Old'] = 0       
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName              
+                                            
+
+        if len(data) == 0:
+                    dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
+                                'Old' : 0 ,'Young' :0, 'Total Count': 0}
+                # return dictionary
+        else :
+
+                # Define the order of time ranges
+                df = df_pivot.sort_values(by=['Time Range', 'Total Count'], ascending=[True, False]).drop_duplicates(subset='Time Range')
+                # Define the order of time ranges
+                time_range_order = [f"{i} AM - {i + 1} AM" if i != 12 else f"{i} AM - {i + 1} PM" for i in range(12)]
+                time_range_order.extend([f"{i} PM - {i + 1} PM" if i != 12 else f"{i} PM - {i + 1} AM" for i in range(12)])
+                ind =  time_range_order.index('0 PM - 1 PM')
+                time_range_order[ind] = '12 PM - 1 PM'
+
+                # Convert 'Time Range' column to categorical with predefined order
+                df['Time Range'] = pd.Categorical(df['Time Range'], categories=time_range_order, ordered=True)
+
+                # Sort DataFrame by 'Time Range'
+                df.sort_values(by='Time Range', inplace=True)
+                df.dropna(inplace=True)
+                dictionary = df.to_dict(orient='records')       
+                all_data.append(dictionary)
+
+    return all_data
+
+
+# pprint.pprint(get_all_cameras_agePerH(27,3,2024))
+
+def get_all_cameras_agePerM(month, year):
+
+    """
+    Filter data by month and get the total count for male and female for each day.
+
+    Args:
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        List: List containing month, total count, camera name, and model for each month in the year.
+    """
+    # Ensure month is zero-padded if less than 10
+    month = int(month)
+    year = int(year)
+    month_str = str(month).zfill(2)
+    # Get the number of days in the month
+    num_days = calendar.monthrange(year, month)[1]
+    # camera_names = finding_camera_names()
+    camera_names =  all_cameras_in_model('Age')['Camera Names']
+    all_data = []
+
+    if isinstance(camera_names, list):  
+    # camera_names = ['aslom','GenderTest','FristCam']
+        for CameraName in camera_names :
+            print('Getting Data of :' , CameraName)
+            # Query to filter by camera name and date    
+            # Initialize an empty list to store data for all days in the month
+            data = []
+            # Iterate over all days in the month
+            for day in range(1, num_days + 1):
+                # Retrieve data for the specific day using the existing function
+                daily_data = Age_filtering_date_aggregates(CameraName, day, month, year)
+                # print(daily_data)                
+                # If there's no data for the day, add zeros for male and female counts
+                if isinstance(daily_data, dict): # If there's no data for the day
+                    data.append({
+                        'Camera Name': CameraName,
+                        'Time Range': f"{year}-{month_str}-{str(day).zfill(2)}",
+                        'Young': 0,
+                        'Old': 0,
+                        'Total Count': 0
+                    })
+                else:
+                    # Calculate the total count for male and female for the day
+                    old_count = daily_data['Old'].sum()
+                    young_count = daily_data['Young'].sum()
+                    total_count = old_count + young_count
+                    
+                    # Add the data for the day to the list
+                    data.append({
+                        'Camera Name': CameraName,
+                        'Time Range': f"{year}-{month_str}-{str(day).zfill(2)}",
+                        'Old': old_count,
+                        'Young': young_count,
+                        'Total Count': total_count
+                    })
+
+            # Convert the list of dictionaries to a DataFrame
+            df = pd.DataFrame(data)
+
+            # Return the DataFrame
+            dictionary = df.to_dict(orient='records')
+            all_data.append(dictionary)
+
+    return all_data 
+           
+# pprint.pprint(get_all_cameras_agePerM(3,2024))
+
+def get_all_cameras_agePerY(year):
+    """
+    Filter data by year and get the total count for male and female for each month.
+
+    Args:
+        CameraName (str): Name of the camera.
+        year (int): Year component.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing total count for male and female for each month.
+    """
+    # Initialize an empty list to store data for all months in the year
+    year = int(year)
+    camera_names =  all_cameras_in_model('e')['Camera Names']
+    all_data = []
+    for CameraName in camera_names :
+        data = []
+        # Iterate over all months in the year
+        for month in range(1, 13):
+            # Get the number of days in the month
+            num_days = calendar.monthrange(year, month)[1]
+
+            # Initialize counters for male and female counts for the month
+            old_count_month = 0
+            young_count_month = 0
+
+            # Iterate over all days in the month
+            for day in range(1, num_days + 1):
+                # Retrieve data for the specific day using the existing function
+                daily_data = Age_filtering_date_aggregates(CameraName, day, month, year)
+                # If there's data for the day, sum the male and female counts
+                if not isinstance(daily_data, dict): # If there's no data for the day
+                    old_count_month += daily_data['Old'].sum()
+                    young_count_month += daily_data['Young'].sum()
+                    # print('hi')
+            # Calculate the total count for the month
+            total_count_month = old_count_month + young_count_month
+            
+            # Add the aggregated data for the month to the list
+            data.append({
+                'Camera Name': CameraName,
+                'Time Range': calendar.month_name[int(month)],
+                'Year' : year ,
+                'Old': old_count_month,
+                'Young': young_count_month,
+                'Total Count': total_count_month
+            })
+
+        # Convert the list of dictionaries to a DataFrame
+        df = pd.DataFrame(data)
+        dictonary =    df.to_dict(orient='records')
+        all_data.append(dictonary)
+        # Return the DataFrame
+    return all_data
+
+# pprint.pprint(get_all_cameras_agePerY(2024))
+
+
+
+def get_all_cameras_AgePerMinutes(hour, day, month, year):
+    """
+    Filter data by date and hour, and get the count for male, female, and total count for each minute within that hour.
+
+    Args:
+        hour (int): Hour for which data is to be aggregated.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing minute-wise count for male, female, and total count for the given hour.
+    """
+    # Ensure month, day, and hour are zero-padded if less than 10
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    hour = int(hour) 
+    hour -=2
+    # Construct target date string
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    existing_collection = db['ModelAgeData']
+
+    camera_names =  all_cameras_in_model('Age')['Camera Names']
+    print(camera_names)
+    # camera_names = ['aslom','GenderTest','FristCam']
+    all_data = []
+    for CameraName in camera_names :
+        print('Getting Data of :' , CameraName)
+        # Query to filter by camera name and date
+        query = {
+            'Camera Info.Camera Name': CameraName,
+            'Date': TargetDate,
+            '$expr': {'$eq': [{'$hour': '$Timestamp'}, hour]}
+        }        
+        data = []    
+        if check_existing_document(existing_collection, query):
+            print(f'{CameraName} Camera Found in Age Collection')
+
+            pipeline = [
+                {"$match": query},
+                {"$unwind": "$Label"},
+                {"$group": {
+                    "_id": {
+                        "Minute": {"$minute": "$Timestamp"},
+                        "Age": "$Label.Age"
+                    },
+                    "count": {"$sum": 1}
+                }},
+                {"$project": {
+                    "Minute": "$_id.Minute",
+                    "Age": "$_id.Age",
+                    "Count": "$count",
+                    "_id": 0
+                }},
+                {"$sort": {"Minute": 1}}
+            ]
+
+            result = list(existing_collection.aggregate(pipeline))
+            if result:
+                for item in result:
+                    minute = item['Minute']
+                    time_range = f"{hour+2:02}:{minute:02}"  # Construct time range in HH:MM format
+                    Age = item['Age']
+                    count = item['Count']
+
+                    data.append({
+                        'Time Range': time_range,
+                        'Age': Age,
+                        'Count': count,
+                    })
+
+                # Create DataFrame from collected data
+                df = pd.DataFrame(data)
+                # Pivot DataFrame to get male and female counts separately
+                df_pivot = df.pivot_table(index='Time Range', columns='Age', values='Count', aggfunc='sum',
+                                        fill_value=0)
+
+                # Add a total count column
+                # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+                # Ensure all minutes in the hour are covered, and fill in missing minutes with zero counts
+                all_minutes = [f"{hour+2:02}:{minute:02}" for minute in range(60)]
+                df_pivot = df_pivot.reindex(all_minutes, fill_value=0)
+                df_pivot.columns.name = None
+                df_pivot.reset_index(inplace=True)
+
+                try :                                        
+                        if 'Old' in list(df_pivot.columns) and 'Young' in list(df_pivot.columns) :
+                        # Add a total count column
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName   
+
+                        elif 'Old' not in list(df_pivot.columns) : 
+                            df_pivot['Old'] = 0     
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName        
+
+                        elif 'Young' not in list(df_pivot.columns) : 
+    
+                            df_pivot['Young'] = 0                        
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName              
+
+                except :
+                            df_pivot['Old'] = 0     
+                            df_pivot['Young'] = 0       
+                            df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                            df_pivot['Camera Name'] = CameraName                   
+                            
+
+        if len(data) == 0:
+                    dictionary = {'Camera Name': CameraName, 'Time Range': TargetDate,
+                                'Old' : 0 ,'Young' :0, 'Total Count': 0}
+                    # return dictionary
+        else :
+                dictionary = df_pivot.to_dict(orient='records')
+                all_data.append(dictionary)
+    return all_data    
+
+# pprint.pprint(get_all_cameras_AgePerMinutes(11,27,3,2024))
+
+def get_all_cameras_AgerPerSeconds(minute, hour, day, month, year):
+    """
+    Filter data by date and hour, and get the sum for male, female, and total count for each second within the specified minute.
+
+    Args:
+        CameraName (str): Name of the camera.
+        hour (int): Hour component of the time range.
+        minute (int): Minute component of the time range.
+        day (int): Day component of the date.
+        month (int): Month component of the date.
+        year (int): Year component of the date.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing second-wise count for male, female, and total count for the given minute.
+    """
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    
+    TargetDate = f"{year}-{month_str}-{day_str}"
+
+    existing_collection = db['ModelAgeData']
+
+    hour = int(hour)
+    minute = int(minute)
+    hour = hour -2
+    camera_names =  all_cameras_in_model('Age')['Camera Names']
+    print(camera_names)
+    # camera_names = ['aslom','GenderTest','FristCam']
+    all_data = []
+    for CameraName in camera_names :
+        print('Getting Data of :' , CameraName)
+        # Query to filter by camera name and date
+        query = {
+            'Camera Info.Camera Name': CameraName,
+            'Date': TargetDate,
+            '$expr': {'$and': [
+                {'$eq': [{'$hour': '$Timestamp'}, hour]},
+                {'$eq': [{'$minute': '$Timestamp'}, minute]},
+                {'$gte': [{'$second': '$Timestamp'}, 0]},
+                {'$lt': [{'$second': '$Timestamp'}, 60]}  # Assuming seconds range from 0 to 59
+            ]}
+                }     
+        data = []        
+
+        if check_existing_document(existing_collection, query):
+            print(f'{CameraName} Camera Found in Gender Collection')
+
+            pipeline = [
+                {"$match": query},
+                {"$unwind": "$Label"},
+                {"$group": {
+                    "_id": {
+                        "Second": {"$second": "$Timestamp"},
+                        "Age": "$Label.Age"
+                    },
+                    "count": {"$sum": 1}
+                }},
+                {"$project": {
+                    "Second": "$_id.Second",
+                    "Age": "$_id.Age",
+                    "Count": "$count",
+                    "_id": 0
+                }},
+                {"$sort": {"Second": 1}}
+            ]
+
+            result = list(existing_collection.aggregate(pipeline))
+            if result:
+                for item in result:
+                    second = item['Second']
+                    Age = item['Age']
+                    count = item['Count']
+
+                    data.append({
+                        'Time Range': f"{hour+2:02}:{minute:02}:{second:02}",
+                        'Age': Age,
+                        'Count': count,
+                        'Second': second
+                    })
+            # Create DataFrame from collected data
+            df = pd.DataFrame(data)
+            # Pivot DataFrame to get male and female counts    
+            df_pivot = df.pivot_table(index='Second', columns='Age', values='Count', aggfunc='sum', fill_value=0)
+            # Add a total count column
+            # df_pivot['Total Count'] = df_pivot['Female'] + df_pivot['Male']
+            # Ensure all seconds in the minute are covered, and fill in missing seconds with zero counts
+            # all_seconds = [second for second in range(60)]
+            # df_pivot = df_pivot.reindex(all_seconds, fill_value=0)
+            df_pivot.columns.name = None
+            df_pivot.reset_index(inplace=True)                
+            try :                                        
+                    if 'Young' in list(df_pivot.columns) and 'Old' in list(df_pivot.columns) :
+                    # Add a total count column
+                        df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
+                        df_pivot['Camera Name'] = CameraName   
+                    elif 'Young' not in list(df_pivot.columns) : 
+                        df_pivot['Young'] = 0     
+                        df_pivot['Total Count'] = df_pivot['Young'] + df_pivot['Old']
+                        df_pivot['Camera Name'] = CameraName    
+
+                    elif 'Old' not in list(df_pivot.columns) : 
+                        df_pivot['Old'] = 0                        
+                        df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
+                        df_pivot['Camera Name'] = CameraName              
+
+            except :
+                        df_pivot['Young'] = 0     
+                        df_pivot['Old'] = 0       
+                        df_pivot['Total Count'] = df_pivot['Old'] + df_pivot['Young']
+                        df_pivot['Camera Name'] = CameraName       
+
+            df_pivot['Time Range'] = f"{hour+2:02}:{minute:02}:" + df_pivot['Second'].astype(str).str.zfill(2)
+                                                
+        if len(data) == 0:
+            # If no data found for the given minute, return a dictionary with zero counts for all seconds
+            dictionary = [{'Camera Name': CameraName, 'Time Range': f"{hour+2:02}:{minute:02}:{second:02}", 'Young': 0, 'Old': 0, 'Total Count': 0, 'Second': second} for second in range(60)]
+            # return dictionary
+        else:
+            dictionary = df_pivot.to_dict(orient='records')
+            all_data.append(dictionary)
+
+    return    all_data      
+
+# pprint.pprint(get_all_cameras_AgerPerSeconds(6,11,27,3,2024))
+
 ###############################################################
 def postcam_getviolenceperMinutes(cameraName, hour, day, month, year):
     """
     Filter data by date and hour and get the maximum count in the form of time range for all models applied to a specific camera, grouped by minutes within the specified hour.
-
     Args:
         CameraName (str): Name of the camera.
         hour (int): Hour component of the time range.
         day (int): Day component of the date.
         month (int): Month component of the date.
         year (int): Year component of the date.
-
     Returns:
         list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', and 'Max Count' keys.
     """
@@ -5372,13 +5990,11 @@ def postcam_getviolenceperMinutes(cameraName, hour, day, month, year):
         return dictionary
 
 
-
 # pprint.pprint(postcam_getviolenceperMinutes('MARY',10,27,3,2024))
 
 def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
     """
     Filter data by date and hour and get all count data for violence applied to a specific camera, grouped by seconds within the specified minute.
-
     Args:
         CameraName (str): Name of the camera.
         hour (int): Hour component of the time range.
@@ -5386,7 +6002,6 @@ def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
         day (int): Day component of the date.
         month (int): Month component of the date.
         year (int): Year component of the date.
-
     Returns:
         list of dicts: List containing dictionaries with 'Camera Name', 'Time Range', 'Model', 'Count', and 'Second' keys.
     """
@@ -5401,7 +6016,7 @@ def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
     }
     hour = int(hour)
     hour = hour - 2
-    
+
     minute = int(minute)
 
     data = []
@@ -5444,14 +6059,14 @@ def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
         if len(data) == 0:
             dictionary = {'Camera Name': cameraName, 'Time Range': f"{hour+2:02}:{minute:02}", 'Label': "Null", 'Model': 'Not Found', 'Second': -1}
             return [dictionary]
-        
+
             # for second in range(60):
             #     time_range = f"{hour+2:02}:{minute:02}:{second:02}"
             #     data.append({'Camera Name': CameraName, 'Time Range': time_range, 'Model': 'Not Found', 'Label': Label, 'Second': second})
 
-            
+
             # return data
-        
+
         else:
             return data
 
@@ -5461,7 +6076,3 @@ def postcam_getviolenceSeconds(cameraName, minute, hour, day, month, year):
         return [dictionary]
 
 # pprint.pprint(postcam_getviolenceSeconds('MARY',40,11,27,3,2024))
-
-                 
-
-

@@ -15,6 +15,7 @@ import jwt
 import secrets
 import psutil
 import time
+from threading import Event
 warnings.filterwarnings("ignore")
 
 
@@ -249,7 +250,7 @@ def get_cameraname():
 @log_route_info_to_db
 # @login_required
 def get_modelname():
-    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender' , 'clothes color' , 'enter exit counting']
+    modelname = ['violence' , 'vehicle' , 'crowdedDensity' , 'crossingBorder' , 'crowded' ,'gender' , 'clothes color' , 'enter exit counting', 'Age']
     return jsonify(modelname)
 
 # ##--------------------------------------
@@ -1010,6 +1011,7 @@ def gender_count_time_range():
             except :
                 return jsonify(data)        
 
+
 #______________________________________________________________
 @app.route('/vechile_count_time_range' , methods = ['POST'])
 @log_route_info_to_db
@@ -1072,7 +1074,7 @@ def vechile_count_time_range():
             except :
                 return jsonify(data)            
 
-
+#______________________________________________________________
 @app.route('/allmodelsstatisticsvehicle' , methods = ['POST'])
 @log_route_info_to_db
 #@login_required
@@ -1275,7 +1277,7 @@ def AgeCount_Docs():
                 docs = docs.to_dict(orient='records')
                 return jsonify(docs)
             
-        if  cameraName and  not minute and hour and day and month and year :
+        elif   cameraName and  not minute and hour and day and month and year :
             docs = Age_filtering_Minutes_aggregates(cameraName,hour, day, month, year)
             try :
                 return jsonify(docs) 
@@ -1283,8 +1285,8 @@ def AgeCount_Docs():
                 docs = docs.to_dict(orient='records')
                 return jsonify(docs)            
 
-        elif  cameraName and not hour and day and month and year :
-            docs = Age_filtering_date_aggrigates(cameraName, day, month, year)
+        elif  cameraName and not minute and not hour and day and month and year :
+            docs = Age_filtering_date_aggregates(cameraName, day, month, year)
             try :
                 docs = docs.to_dict(orient='records')
                 return jsonify(docs) 
@@ -1292,7 +1294,7 @@ def AgeCount_Docs():
                 return jsonify(docs)
 
 
-        elif cameraName and not day and month and year:
+        elif cameraName and not minute and not hour and not day and month and year:
             docs  = Age_filtering_month_aggregates(cameraName, month, year)
             try :
                 docs = docs.to_dict(orient='records')
@@ -1301,13 +1303,74 @@ def AgeCount_Docs():
                 return jsonify(docs)
 
 
-        elif cameraName and not day and not month and year:
+        elif cameraName and not minute and not hour and not day and not month and year:
             docs = Age_filtering_year_aggregates(cameraName, year)
             try :
                 docs = docs.to_dict(orient='records')
                 return jsonify(docs) 
             except :
                 return jsonify(docs)
+
+
+#____________________________________________________________
+@app.route("/age_count_time_range" , methods = ['POST'])
+@log_route_info_to_db
+# @login_required
+def age_count_time_range():
+        data = request.form
+        if not data:
+            return jsonify({'mess': "No data provided" }) 
+        
+        day = data.get('day')
+        month = data.get('month')
+        year = data.get('year')
+        hour = data.get('hour')
+        minute = data.get('minute')
+ 
+        docs = None 
+
+        if   minute and hour and day and month and year :
+            docs = get_all_cameras_AgerPerSeconds(minute,hour, day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)
+            
+        elif  not minute and hour and day and month and year :
+            docs = get_all_cameras_AgePerMinutes(hour, day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)            
+
+        elif  not minute and not hour and day and month and year :
+            docs = get_all_cameras_agePerH(day, month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)
+
+
+        elif  not minute and not hour and not day and month and year:
+            docs  = get_all_cameras_agePerM( month, year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)
+
+
+        elif  not minute and not hour and not day and not month and year:
+            docs = get_all_cameras_agePerY(year)
+            try :
+                return jsonify(docs) 
+            except :
+                docs = docs.to_dict(orient='records')
+                return jsonify(docs)
+
 
 #____________________________________________________________
 
@@ -1352,6 +1415,7 @@ def violence_Docs():
             return jsonify(docs)
 
 
+#____________________________________________________________
 @app.route('/filter_all_cameras_in_violence_bydate',methods=['POST']) 
 @log_route_info_to_db
 def violence_filter():
@@ -1388,6 +1452,7 @@ def violence_filter():
             newdoc.append(docs)
 
     return jsonify(newdoc)
+
 
 
 @app.route('/display_stream'  ,methods=['POST','GET'])
@@ -1515,6 +1580,85 @@ def get_camera_names():
     cam_list = finding_camera_names()
     print(cam_list)
     return jsonify(cam_list)
+
+
+run = db['RunningNow']
+
+def get_last_model_folder(cameraname):
+    cursor = run.find({"Camera Name": cameraname}, {'Model Name': 1})
+    modelsrunnning = [document.get('Model Name') for document in cursor]
+    
+    if modelsrunnning:
+        lastmodel = modelsrunnning[-1]
+        folder_path = f"D:/Luminalens-CurrentVersion/app/output/{lastmodel}/{cameraname}"
+        return folder_path
+    else:
+        return None
+
+event = Event()
+
+def generate_frames(cameraname):
+    global last_displayed_image
+    folder_path = get_last_model_folder(cameraname)
+
+    if folder_path is None:
+        time.sleep(1)
+        return
+
+    images = [img for img in os.listdir(folder_path) if img.endswith(".jpg") or img.endswith(".png")]
+    images.sort(key=lambda x: os.path.getmtime(os.path.join(folder_path, x)))
+
+    if images:
+        last_displayed_image = images[-1]
+
+    while True:
+        event.wait()
+        
+        images = [img for img in os.listdir(folder_path) if img.endswith(".jpg") or img.endswith(".png")]
+        images.sort(key=lambda x: os.path.getmtime(os.path.join(folder_path, x)))
+
+        new_images = []
+        start_sending = False
+        for image_name in images:
+            if start_sending or image_name == last_displayed_image:
+                start_sending = True
+                new_images.append(image_name)
+
+        for image_name in new_images:
+            image_path = os.path.join(folder_path, image_name)
+            img = cv2.imread(image_path)
+
+            if img is not None:
+                ret, frame = cv2.imencode('.jpg', img)
+                if not ret:
+                    break
+
+                last_displayed_image = image_name
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame.tobytes() + b'\r\n')
+
+        event.clear()
+
+def check_for_new_images(cameraname):
+    global event
+    while True:
+        folder_path = get_last_model_folder(cameraname)
+        images = [img for img in os.listdir(folder_path) if img.endswith(".jpg") or img.endswith(".png")]
+        images.sort(key=lambda x: os.path.getmtime(os.path.join(folder_path, x)))
+
+        if images:
+            event.set()
+        
+        time.sleep(1)
+
+@app.route('/video_feed')
+def video_feed():
+    cameraname = request.args.get('cameraname')
+    if not cameraname:
+        return jsonify({'mess': "No data provided" })    
+    threading.Thread(target=check_for_new_images, args=(cameraname,)).start()
+    return Response(generate_frames(cameraname), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 #____________________________________________________________
 if __name__ == '__main__':
